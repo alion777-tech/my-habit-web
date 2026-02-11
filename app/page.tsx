@@ -517,8 +517,9 @@ export default function Home() {
   // 1. 習慣の獲得ポイント
   const habitPoints = habits.reduce((sum, h) => sum + (h.point ?? 0), 0);
 
-  // 2. 目標達成ボーナス (達成数 × 100pt) - これを動的に計算する
-  const goalBonusPoints = (Number(profile.stats?.goalsAchievedCount) || 0) * 100;
+  // 2. 目標達成ボーナス (達成数 × 100pt) - リアルタイムな goals 配列から計算
+  const goalBonusPoints = goals.filter(g => g.done).length * 100;
+  // const goalBonusPoints = (Number(profile.stats?.goalsAchievedCount) || 0) * 100;
 
   // 3. 称号ボーナス (DBに保存されている bonusPoints は称号分のみとする)
   // ※ 以前のバージョンで目標ボーナスが bonusPoints に混ざっている可能性があるが
@@ -854,9 +855,9 @@ export default function Home() {
             { id: "dream", label: "夢・目標", icon: "🌈" },
             { id: "todo", label: "ToDo", icon: "📝" },
             // Unlock condition: 10 goals achieved
-            // 明示的に数値変換してチェック
+            // goals配列から直接判定 (statsの同期ズレを防ぐため)
           ].concat(
-            Number(profile.stats?.goalsAchievedCount || 0) >= 10
+            goals.filter(g => g.done).length >= 10
               ? [{ id: "bucketList", label: "100リスト", icon: "💯" }]
               : []
           ).map((btn) => (
