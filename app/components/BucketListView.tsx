@@ -145,35 +145,56 @@ export default function BucketListView({ uid, isDarkMode = false }: Props) {
                     </div>
                 )}
 
-                {editingTitle ? (
-                    <input
-                        value={data.title}
-                        onChange={(e) => updateData({ title: e.target.value })}
-                        onBlur={() => setEditingTitle(false)}
-                        onKeyDown={(e) => { if (e.key === "Enter") setEditingTitle(false); }}
-                        autoFocus
-                        placeholder="例：2030年までにしたいこと"
-                        style={{
-                            fontSize: 24,
-                            fontWeight: "bold",
-                            textAlign: "center",
-                            background: "transparent",
-                            border: "none",
-                            borderBottom: "2px solid #6366f1",
-                            outline: "none",
-                            color: isDarkMode ? "#fff" : "#000",
-                            width: "90%",
-                            marginTop: 4
-                        }}
-                    />
-                ) : (
-                    <h1
-                        onClick={() => setEditingTitle(true)}
-                        style={{ fontSize: 24, fontWeight: "bold", margin: "4px 0 16px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
-                    >
-                        {data.title} <span style={{ fontSize: 16, opacity: 0.5 }}>✏️</span>
-                    </h1>
-                )}
+                {(() => {
+                    const suffix = "までにしたい100のこと";
+                    const hasSuffix = data.title.endsWith(suffix);
+                    const prefix = hasSuffix ? data.title.slice(0, -suffix.length) : data.title;
+
+                    return editingTitle ? (
+                        <div style={{ display: "flex", justifyContent: "center", alignItems: "baseline", gap: 2, marginBottom: 16 }}>
+                            <input
+                                value={prefix}
+                                onChange={(e) => updateData({ title: e.target.value + suffix })}
+                                onBlur={() => setEditingTitle(false)}
+                                onKeyDown={(e) => { if (e.key === "Enter") setEditingTitle(false); }}
+                                autoFocus
+                                placeholder=""
+                                style={{
+                                    fontSize: 24,
+                                    fontWeight: "bold",
+                                    textAlign: "right",
+                                    background: "transparent",
+                                    border: "none",
+                                    borderBottom: "2px solid #6366f1",
+                                    outline: "none",
+                                    color: isDarkMode ? "#fff" : "#000",
+                                    width: "auto",
+                                    minWidth: 60,
+                                    maxWidth: "50%"
+                                }}
+                            />
+                            <span style={{ fontSize: 24, fontWeight: "bold", whiteSpace: "nowrap" }}>{suffix}</span>
+                        </div>
+                    ) : (
+                        <h1
+                            onClick={() => setEditingTitle(true)}
+                            style={{
+                                fontSize: 24,
+                                fontWeight: "bold",
+                                margin: "4px 0 16px",
+                                cursor: "pointer",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                flexWrap: "wrap",
+                                gap: 4
+                            }}
+                        >
+                            <span>{prefix}</span>
+                            <span style={{ whiteSpace: "nowrap" }}>{suffix} <span style={{ fontSize: 16, opacity: 0.5 }}>✏️</span></span>
+                        </h1>
+                    );
+                })()}
 
                 {/* Global Deadline Picker */}
                 <div style={{ marginBottom: 16 }}>
