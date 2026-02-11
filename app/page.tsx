@@ -31,6 +31,7 @@ import TodoView from "./components/TodoView";
 import DreamView from "./components/DreamView";
 import HistoryView from "./components/HistoryView";
 import FriendView from "./components/FriendView";
+import BucketListView from "./components/BucketListView";
 import { deleteGoal as deleteGoalAction } from "@/lib/goalActions";
 
 
@@ -249,7 +250,7 @@ export default function Home() {
 
   // 🧭 画面切り替え用
   const [view, setView] = useState<
-    "habit" | "history" | "stats" | "dream" | "todo" | "title" | "profile" | "friend"
+    "habit" | "history" | "stats" | "dream" | "todo" | "title" | "profile" | "friend" | "bucketList"
   >("habit");
 
   // 📅 カレンダー用
@@ -790,6 +791,8 @@ export default function Home() {
             { id: "habit", label: "習慣", icon: "🔥" },
             { id: "dream", label: "夢・目標", icon: "🌈" },
             { id: "todo", label: "ToDo", icon: "📝" },
+            // Unlock condition: 10 goals achieved
+            ...((profile.stats?.goalsAchievedCount || 0) >= 10 ? [{ id: "bucketList", label: "100リスト", icon: "💯" }] : []),
           ].map((btn) => (
             <button
               key={btn.id}
@@ -1001,6 +1004,13 @@ export default function Home() {
             profile={profile}
             setProfile={setProfile}
             onSave={handleSaveProfile}
+            isDarkMode={isDarkMode}
+          />
+        )}
+
+        {view === "bucketList" && (
+          <BucketListView
+            uid={uid}
             isDarkMode={isDarkMode}
           />
         )}

@@ -233,7 +233,28 @@ export default function DreamView({
               checked={g.done}
               onChange={async () => {
                 if (!uid) return;
-                await updateGoalAction(uid, g.id, { done: !g.done });
+                const newDoneState = !g.done;
+
+                // 1. ゴール状態更新
+                await updateGoalAction(uid, g.id, { done: newDoneState });
+
+                // 2. 統計更新 (達成数カウント)
+                const currentStats = profile.stats || {};
+                const currentCount = currentStats.goalsAchievedCount || 0;
+
+                // チェックON = 達成数+1, OFF = 達成数-1
+                const newCount = newDoneState
+                  ? currentCount + 1
+                  : Math.max(0, currentCount - 1);
+
+                const newStats = {
+                  ...currentStats,
+                  goalsAchievedCount: newCount
+                };
+
+                // プロフィール更新 (State + Firestore)
+                setProfile(prev => ({ ...prev, stats: newStats }));
+                await saveUserProfile(uid, { stats: newStats });
               }}
               style={{ width: 18, height: 18, cursor: "pointer" }}
             />

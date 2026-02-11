@@ -70,3 +70,16 @@ export type UserProfile = {
     habitsAddedToday?: number;
   };
 };
+
+export type BucketListItem = {
+  id: number;       // 1-100
+  text: string;
+  deadline?: string | null;
+  isCompleted: boolean;
+};
+
+export type BucketListData = {
+  title: string;
+  subtitle: string;
+  items: BucketListItem[];
+};
