@@ -146,52 +146,68 @@ export default function BucketListView({ uid, isDarkMode = false }: Props) {
                 )}
 
                 {(() => {
-                    const suffix = "までにしたい100のこと";
-                    const hasSuffix = data.title.endsWith(suffix);
-                    const prefix = hasSuffix ? data.title.slice(0, -suffix.length) : data.title;
+                    // Title format: "Prefix" + "までに" + "したい100のこと"
+                    const fullSuffix = "までにしたい100のこと";
+                    const suffixPart1 = "までに";
+                    const suffixPart2 = "したい100のこと";
+
+                    const hasSuffix = data.title.endsWith(fullSuffix);
+                    const prefix = hasSuffix ? data.title.slice(0, -fullSuffix.length) : data.title;
 
                     return editingTitle ? (
-                        <div style={{ display: "flex", justifyContent: "center", alignItems: "baseline", gap: 2, marginBottom: 16 }}>
-                            <input
-                                value={prefix}
-                                onChange={(e) => updateData({ title: e.target.value + suffix })}
-                                onBlur={() => setEditingTitle(false)}
-                                onKeyDown={(e) => { if (e.key === "Enter") setEditingTitle(false); }}
-                                autoFocus
-                                placeholder=""
-                                style={{
-                                    fontSize: 24,
-                                    fontWeight: "bold",
-                                    textAlign: "right",
-                                    background: "transparent",
-                                    border: "none",
-                                    borderBottom: "2px solid #6366f1",
-                                    outline: "none",
-                                    color: isDarkMode ? "#fff" : "#000",
-                                    width: "auto",
-                                    minWidth: 60,
-                                    maxWidth: "50%"
-                                }}
-                            />
-                            <span style={{ fontSize: 24, fontWeight: "bold", whiteSpace: "nowrap" }}>{suffix}</span>
+                        <div style={{ marginBottom: 16 }}>
+                            {/* Row 1: Left Aligned [Prefix][suffixPart1] */}
+                            <div style={{ display: "flex", justifyContent: "flex-start", alignItems: "baseline", gap: 2 }}>
+                                <input
+                                    value={prefix}
+                                    onChange={(e) => updateData({ title: e.target.value + fullSuffix })}
+                                    onBlur={() => setEditingTitle(false)}
+                                    onKeyDown={(e) => { if (e.key === "Enter") setEditingTitle(false); }}
+                                    autoFocus
+                                    style={{
+                                        fontSize: 24,
+                                        fontWeight: "bold",
+                                        textAlign: "left",
+                                        background: "transparent",
+                                        border: "none",
+                                        borderBottom: "2px solid #6366f1",
+                                        outline: "none",
+                                        color: isDarkMode ? "#fff" : "#000",
+                                        width: "auto",
+                                        minWidth: 120, // ensure enough space to click
+                                        maxWidth: "70%"
+                                    }}
+                                />
+                                <span style={{ fontSize: 24, fontWeight: "bold" }}>{suffixPart1}</span>
+                            </div>
+
+                            {/* Row 2: Right Aligned [suffixPart2] */}
+                            <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 4 }}>
+                                <span style={{ fontSize: 24, fontWeight: "bold" }}>{suffixPart2}</span>
+                            </div>
                         </div>
                     ) : (
                         <h1
                             onClick={() => setEditingTitle(true)}
                             style={{
-                                fontSize: 24,
-                                fontWeight: "bold",
                                 margin: "4px 0 16px",
                                 cursor: "pointer",
                                 display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                flexWrap: "wrap",
+                                flexDirection: "column",
                                 gap: 4
                             }}
                         >
-                            <span>{prefix}</span>
-                            <span style={{ whiteSpace: "nowrap" }}>{suffix} <span style={{ fontSize: 16, opacity: 0.5 }}>✏️</span></span>
+                            {/* Row 1: Left Aligned */}
+                            <div style={{ display: "flex", justifyContent: "flex-start", alignItems: "baseline", gap: 4 }}>
+                                <span style={{ fontSize: 24, fontWeight: "bold" }}>{prefix}</span>
+                                <span style={{ fontSize: 24, fontWeight: "bold" }}>{suffixPart1}</span>
+                            </div>
+
+                            {/* Row 2: Right Aligned */}
+                            <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 4 }}>
+                                <span style={{ fontSize: 24, fontWeight: "bold" }}>{suffixPart2}</span>
+                                <span style={{ fontSize: 16, opacity: 0.5 }}>✏️</span>
+                            </div>
                         </h1>
                     );
                 })()}
