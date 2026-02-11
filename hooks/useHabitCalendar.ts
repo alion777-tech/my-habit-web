@@ -1,0 +1,80 @@
+// hooks/useHabitCalendar.ts
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import type { DailyStat, Habit } from "@/types/appTypes";
+import { isHabitVisibleOnDate } from "@/lib/habits/visibility";
+
+export const useHabitCalendar = (habits: Habit[]) => {
+  // テスト日付オフセット（DEVボタンで増減する前提）
+  const [testDayOffset, setTestDayOffset] = useState(0);
+
+  // テスト基準日
+  const base = useMemo(() => {
+    const b = new Date();
+    b.setDate(b.getDate() + testDayOffset);
+    return b;
+  }, [testDayOffset]);
+
+  const todayStr = useMemo(() => base.toISOString().slice(0, 10), [base]);
+
+  const yesterdayStr = useMemo(() => {
+    const y = new Date(base);
+    y.setDate(y.getDate() - 1);
+    return y.toISOString().slice(0, 10);
+  }, [base]);
+
+  // カレンダー表示中の月
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+
+  // テスト日付を動かしたら、その月に追従（安全版）
+  useEffect(() => {
+    setCurrentMonth(new Date(base.getFullYear(), base.getMonth(), 1));
+  }, [base]);
+
+  // 月の日付一覧（YYYY-MM-DD）
+  const calendarDays = useMemo(() => {
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    return Array.from({ length: daysInMonth }, (_, i) => {
+      const d = new Date(year, month, i + 1);
+      return d.toISOString().slice(0, 10);
+    });
+  }, [currentMonth]);
+
+  // 達成率（カレンダー日付ベース）
+  const dailyStats: DailyStat[] = useMemo(() => {
+    return calendarDays.map((date) => {
+      const todaysHabits = habits.filter((h) => isHabitVisibleOnDate(h, date));
+      const total = todaysHabits.length;
+
+      const doneCount = todaysHabits.filter((h) =>
+  (h.pointHistory ?? []).some((p) => p.date === date)
+).length;
+
+      const rate = total === 0 ? 0 : Math.round((doneCount / total) * 100);
+      return { date, total, doneCount, rate };
+    });
+  }, [calendarDays, habits]);
+
+  // 「今日の曜日」（weekly表示用）
+  const todayDow = useMemo(() => base.getDay(), [base]);
+
+  return {
+    // テスト日付
+    testDayOffset,
+    setTestDayOffset,
+    base,
+    todayStr,
+    yesterdayStr,
+    todayDow,
+
+    // カレンダー
+    currentMonth,
+    setCurrentMonth,
+    calendarDays,
+    dailyStats,
+  };
+};
