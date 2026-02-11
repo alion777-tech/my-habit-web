@@ -123,6 +123,7 @@ export default function BucketListView({ uid, isDarkMode = false }: Props) {
                         value={data.subtitle}
                         onChange={(e) => updateData({ subtitle: e.target.value })}
                         onBlur={() => setEditingSubtitle(false)}
+                        onKeyDown={(e) => { if (e.key === "Enter") setEditingSubtitle(false); }}
                         autoFocus
                         style={{
                             fontSize: 14,
@@ -137,10 +138,10 @@ export default function BucketListView({ uid, isDarkMode = false }: Props) {
                     />
                 ) : (
                     <div
-                        onDoubleClick={() => setEditingSubtitle(true)}
-                        style={{ fontSize: 14, color: isDarkMode ? "#9ca3af" : "#6b7280", cursor: "pointer", minHeight: 20 }}
+                        onClick={() => setEditingSubtitle(true)}
+                        style={{ fontSize: 14, color: isDarkMode ? "#9ca3af" : "#6b7280", cursor: "pointer", minHeight: 20, display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}
                     >
-                        {data.subtitle}
+                        {data.subtitle} <span style={{ fontSize: 12, opacity: 0.7 }}>✏️</span>
                     </div>
                 )}
 
@@ -149,6 +150,7 @@ export default function BucketListView({ uid, isDarkMode = false }: Props) {
                         value={data.title}
                         onChange={(e) => updateData({ title: e.target.value })}
                         onBlur={() => setEditingTitle(false)}
+                        onKeyDown={(e) => { if (e.key === "Enter") setEditingTitle(false); }}
                         autoFocus
                         placeholder="例：2030年までにしたいこと"
                         style={{
@@ -166,10 +168,10 @@ export default function BucketListView({ uid, isDarkMode = false }: Props) {
                     />
                 ) : (
                     <h1
-                        onDoubleClick={() => setEditingTitle(true)}
-                        style={{ fontSize: 24, fontWeight: "bold", margin: "4px 0 16px", cursor: "pointer" }}
+                        onClick={() => setEditingTitle(true)}
+                        style={{ fontSize: 24, fontWeight: "bold", margin: "4px 0 16px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
                     >
-                        {data.title}
+                        {data.title} <span style={{ fontSize: 16, opacity: 0.5 }}>✏️</span>
                     </h1>
                 )}
 
