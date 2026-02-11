@@ -513,9 +513,23 @@ export default function Home() {
 
 
 
-  // 累計獲得ポイント（習慣分 + 称号ボーナス + 目標達成ボーナス）
-  // ※ bonusPointsには称号と目標達成の両方が含まれる
-  const totalPoint = habits.reduce((sum, h) => sum + (h.point ?? 0), 0) + Number(profile.bonusPoints || 0);
+  // 累計獲得ポイント計算
+  // 1. 習慣の獲得ポイント
+  const habitPoints = habits.reduce((sum, h) => sum + (h.point ?? 0), 0);
+
+  // 2. 目標達成ボーナス (達成数 × 100pt) - これを動的に計算する
+  const goalBonusPoints = (Number(profile.stats?.goalsAchievedCount) || 0) * 100;
+
+  // 3. 称号ボーナス (DBに保存されている bonusPoints は称号分のみとする)
+  // ※ 以前のバージョンで目標ボーナスが bonusPoints に混ざっている可能性があるが
+  //   handleAwardTitles で再計算されるため、一時的にズレても称号判定で修正される運用にする。
+  //   ただし、既存の bonusPoints に goalBonus が含まれていると二重計上になるリスクがある。
+  //   ここでは「bonusPoints」は「称号によるボーナス」として扱うことにする。
+  const titleBonusPoints = Number(profile.bonusPoints || 0);
+
+  // 合計
+  const totalPoint = habitPoints + goalBonusPoints + titleBonusPoints;
+  // const totalPoint = habits.reduce((sum, h) => sum + (h.point ?? 0), 0) + Number(profile.bonusPoints || 0);
 
   const level = Math.floor(totalPoint / 100) + 1;
 
@@ -524,26 +538,45 @@ export default function Home() {
     if (!uid || isLoading) return;
     const s = profile.stats || {};
     const newTitles: string[] = [...earnedTitles];
-    let totalBonus = 0;
+    let totalTitleBonus = 0;
+
+    // 既存の称号のポイントも再計算（整合性確保）
+    TITLE_DEFINITIONS.forEach(t => {
+      if (earnedTitles.includes(t.id)) {
+        totalTitleBonus += t.bonusPoints;
+      }
+    });
+
     let earnedAny = false;
+    let newBonusAdded = 0;
 
     TITLE_DEFINITIONS.forEach(t => {
       // stats と totalPoint の両方を使用してチェック
       if (!newTitles.includes(t.id) && t.check({ ...s, totalPoints: totalPoint })) {
         newTitles.push(t.id);
-        totalBonus += t.bonusPoints;
+        totalTitleBonus += t.bonusPoints;
+        newBonusAdded += t.bonusPoints;
         earnedAny = true;
         alert(`🏅 新しい称号を獲得！\n「${t.name}」\nボーナス: +${t.bonusPoints} pt`);
       }
     });
 
-    if (earnedAny) {
-      playCharing();
+    // 称号ボーナスが現在のDB値と異なる、または新しい称号がある場合に更新
+    if (earnedAny || totalTitleBonus !== profile.bonusPoints) {
+      if (earnedAny) playCharing();
+
       setEarnedTitles(newTitles);
+      // bonusPoints は「称号の合計」として上書き保存
       await saveUserProfile(uid, {
         earnedTitles: newTitles,
-        bonusPoints: (profile.bonusPoints || 0) + totalBonus
+        bonusPoints: totalTitleBonus
       });
+      // ローカルも更新
+      setProfile(prev => ({
+        ...prev,
+        earnedTitles: newTitles,
+        bonusPoints: totalTitleBonus
+      }));
     }
   };
 

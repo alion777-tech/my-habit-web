@@ -255,6 +255,18 @@ export default function DreamView({
                 // プロフィール更新 (State + Firestore)
                 setProfile(prev => ({ ...prev, stats: newStats }));
                 await saveUserProfile(uid, { stats: newStats });
+
+                // 通知・演出
+                if (newDoneState) {
+                  alert(`🎉 目標達成おめでとうございます！\nボーナスポイント +100pt 獲得しました！`);
+
+                  // 10個達成での機能解禁通知
+                  if (newCount === 10) {
+                    setTimeout(() => {
+                      alert(`🚀 新機能が解禁されました！\n\n「💯 100 LIST (死ぬまでにしたい100のこと)」\n\nがメニューに追加されました。ぜひチェックしてみてください！`);
+                    }, 500);
+                  }
+                }
               }}
               style={{ width: 18, height: 18, cursor: "pointer" }}
             />
