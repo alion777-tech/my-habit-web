@@ -499,8 +499,9 @@ export default function Home() {
 
 
 
-  // 累計獲得ポイント（習慣分 + 称号ボーナス）
-  const totalPoint = habits.reduce((sum, h) => sum + (h.point ?? 0), 0) + (profile.bonusPoints || 0);
+  // 累計獲得ポイント（習慣分 + 称号ボーナス + 目標達成ボーナス）
+  // ※ bonusPointsには称号と目標達成の両方が含まれる
+  const totalPoint = habits.reduce((sum, h) => sum + (h.point ?? 0), 0) + Number(profile.bonusPoints || 0);
 
   const level = Math.floor(totalPoint / 100) + 1;
 
@@ -806,8 +807,12 @@ export default function Home() {
             { id: "dream", label: "夢・目標", icon: "🌈" },
             { id: "todo", label: "ToDo", icon: "📝" },
             // Unlock condition: 10 goals achieved
-            ...((profile.stats?.goalsAchievedCount || 0) >= 10 ? [{ id: "bucketList", label: "100リスト", icon: "💯" }] : []),
-          ].map((btn) => (
+            // 明示的に数値変換してチェック
+          ].concat(
+            Number(profile.stats?.goalsAchievedCount || 0) >= 10
+              ? [{ id: "bucketList", label: "100リスト", icon: "💯" }]
+              : []
+          ).map((btn) => (
             <button
               key={btn.id}
               onClick={() => setView(btn.id as any)}
