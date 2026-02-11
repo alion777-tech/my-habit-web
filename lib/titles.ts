@@ -288,11 +288,35 @@ export const TITLE_DEFINITIONS: TitleDefinition[] = [
         check: (s) => (s.habitsCreatedCount || 0) >= 100
     },
     {
+        id: "effort_goal_achieve_10",
+        name: "有言実行",
+        category: "effort",
+        conditionDescription: "目標を累計10個達成",
+        bonusPoints: 300,
+        check: (s) => (s.goalsAchievedCount || 0) >= 10
+    },
+    {
+        id: "effort_goal_achieve_30",
+        name: "夢追い人",
+        category: "effort",
+        conditionDescription: "目標を累計30個達成",
+        bonusPoints: 500,
+        check: (s) => (s.goalsAchievedCount || 0) >= 30
+    },
+    {
+        id: "effort_goal_achieve_50",
+        name: "達成マニア",
+        category: "effort",
+        conditionDescription: "目標を累計50個達成",
+        bonusPoints: 1000,
+        check: (s) => (s.goalsAchievedCount || 0) >= 50
+    },
+    {
         id: "effort_goal_achieve_100",
         name: "鋼の意思",
         category: "effort",
         conditionDescription: "目標を累計100個達成",
-        bonusPoints: 500,
+        bonusPoints: 2000,
         check: (s) => (s.goalsAchievedCount || 0) >= 100
     },
 
