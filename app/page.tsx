@@ -200,6 +200,20 @@ export default function Home() {
         });
 
         setGoals(list);
+
+        // 🔹 統計データの整合性チェック (既存ユーザーのデータ移行用)
+        if (profile.uid && !isLoading) {
+          const achievedCount = list.filter(g => g.done).length;
+          const currentCount = profile.stats?.goalsAchievedCount || 0;
+
+          // 実際の達成数と統計がズレていたら修正
+          if (achievedCount !== currentCount) {
+            console.log(`[StatsCorrection] Fixing goalsAchievedCount: ${currentCount} -> ${achievedCount}`);
+            const newStats = { ...(profile.stats || {}), goalsAchievedCount: achievedCount };
+            saveUserProfile(profile.uid, { stats: newStats });
+            setProfile(prev => ({ ...prev, stats: newStats }));
+          }
+        }
       },
       (error) => {
         console.error("[onSnapshot goals] error:", error);
