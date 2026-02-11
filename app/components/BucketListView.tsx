@@ -12,11 +12,12 @@ type Props = {
 export default function BucketListView({ uid, isDarkMode = false }: Props) {
     const [data, setData] = useState<BucketListData>({
         title: "死ぬまでにしたい100のこと",
-        subtitle: "My Bucket List 100",
+        subtitle: "Bucket List 100",
         items: Array.from({ length: 100 }, (_, i) => ({
             id: i + 1,
             text: "",
             isCompleted: false,
+            // deadline is removed from UI but kept in type for compatibility if needed
         }))
     });
 
@@ -47,7 +48,8 @@ export default function BucketListView({ uid, isDarkMode = false }: Props) {
 
                 setData({
                     title: saved.title || "死ぬまでにしたい100のこと",
-                    subtitle: saved.subtitle || "My Bucket List 100",
+                    subtitle: saved.subtitle || "Bucket List 100",
+                    targetDate: saved.targetDate || null,
                     items: mergedItems
                 });
             }
@@ -91,7 +93,8 @@ export default function BucketListView({ uid, isDarkMode = false }: Props) {
 
         const newData = {
             title: "死ぬまでにしたい100のこと",
-            subtitle: "My Bucket List 100",
+            subtitle: "Bucket List 100",
+            targetDate: null,
             items: Array.from({ length: 100 }, (_, i) => ({
                 id: i + 1,
                 text: "",
@@ -147,6 +150,7 @@ export default function BucketListView({ uid, isDarkMode = false }: Props) {
                         onChange={(e) => updateData({ title: e.target.value })}
                         onBlur={() => setEditingTitle(false)}
                         autoFocus
+                        placeholder="例：2030年までにしたいこと"
                         style={{
                             fontSize: 24,
                             fontWeight: "bold",
@@ -168,6 +172,26 @@ export default function BucketListView({ uid, isDarkMode = false }: Props) {
                         {data.title}
                     </h1>
                 )}
+
+                {/* Global Deadline Picker */}
+                <div style={{ marginBottom: 16 }}>
+                    <label style={{ fontSize: 12, marginRight: 8, color: isDarkMode ? "#9ca3af" : "#6b7280" }}>
+                        📅 達成目標日:
+                    </label>
+                    <input
+                        type="date"
+                        value={data.targetDate || ""}
+                        onChange={(e) => updateData({ targetDate: e.target.value })}
+                        style={{
+                            padding: "4px 8px",
+                            borderRadius: 6,
+                            border: isDarkMode ? "1px solid #4b5563" : "1px solid #ccc",
+                            background: isDarkMode ? "#1f2937" : "#fff",
+                            color: isDarkMode ? "#fff" : "#000",
+                            cursor: "pointer"
+                        }}
+                    />
+                </div>
 
                 {/* Progress Bar */}
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
@@ -226,7 +250,8 @@ export default function BucketListView({ uid, isDarkMode = false }: Props) {
             {/* List Items */}
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {data.items.map((item) => {
-                    const isOverdue = item.deadline && item.deadline < new Date().toISOString().split("T")[0] && !item.isCompleted;
+                    // Global deadline check
+                    const isOverdue = data.targetDate && data.targetDate < new Date().toISOString().split("T")[0] && !item.isCompleted;
 
                     return (
                         <div
@@ -305,23 +330,6 @@ export default function BucketListView({ uid, isDarkMode = false }: Props) {
                                     </div>
                                 )}
                             </div>
-
-                            {/* Deadline Picker */}
-                            <input
-                                type="date"
-                                value={item.deadline || ""}
-                                onChange={(e) => updateItem(item.id, { deadline: e.target.value })}
-                                style={{
-                                    fontSize: 11,
-                                    padding: "2px 4px",
-                                    borderRadius: 4,
-                                    border: isDarkMode ? "1px solid #4b5563" : "1px solid #e5e7eb",
-                                    background: isDarkMode ? "#1f2937" : "#fff",
-                                    color: isDarkMode ? "#9ca3af" : "#6b7280",
-                                    cursor: "pointer",
-                                    maxWidth: 90
-                                }}
-                            />
                         </div>
                     );
                 })}

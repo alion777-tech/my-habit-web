@@ -81,5 +81,6 @@ export type BucketListItem = {
 export type BucketListData = {
   title: string;
   subtitle: string;
+  targetDate?: string | null; // 全体の目標期限
   items: BucketListItem[];
 };
