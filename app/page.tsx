@@ -209,9 +209,23 @@ export default function Home() {
           // 実際の達成数と統計がズレていたら修正
           if (achievedCount !== currentCount) {
             console.log(`[StatsCorrection] Fixing goalsAchievedCount: ${currentCount} -> ${achievedCount}`);
+
+            // 差分個数 × 100pt を加算（減算）
+            const diffCount = achievedCount - currentCount;
+            const currentBonus = profile.bonusPoints || 0;
+            const newBonus = Math.max(0, currentBonus + (diffCount * 100));
+
             const newStats = { ...(profile.stats || {}), goalsAchievedCount: achievedCount };
-            saveUserProfile(profile.uid, { stats: newStats });
-            setProfile(prev => ({ ...prev, stats: newStats }));
+
+            saveUserProfile(uid, {
+              stats: newStats,
+              bonusPoints: newBonus
+            });
+            setProfile(prev => ({
+              ...prev,
+              stats: newStats,
+              bonusPoints: newBonus
+            }));
           }
         }
       },
