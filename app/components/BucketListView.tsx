@@ -156,8 +156,8 @@ export default function BucketListView({ uid, isDarkMode = false }: Props) {
 
                     return editingTitle ? (
                         <div style={{ marginBottom: 16 }}>
-                            {/* Row 1: Left Aligned [Prefix][suffixPart1] */}
-                            <div style={{ display: "flex", justifyContent: "flex-start", alignItems: "baseline", gap: 2 }}>
+                            {/* Row 1: Center Aligned [Prefix][suffixPart1] */}
+                            <div style={{ display: "flex", justifyContent: "center", alignItems: "baseline", gap: 2 }}>
                                 <input
                                     value={prefix}
                                     onChange={(e) => updateData({ title: e.target.value + fullSuffix })}
@@ -197,8 +197,8 @@ export default function BucketListView({ uid, isDarkMode = false }: Props) {
                                 gap: 4
                             }}
                         >
-                            {/* Row 1: Left Aligned */}
-                            <div style={{ display: "flex", justifyContent: "flex-start", alignItems: "baseline", gap: 4 }}>
+                            {/* Row 1: Center Aligned */}
+                            <div style={{ display: "flex", justifyContent: "center", alignItems: "baseline", gap: 4 }}>
                                 <span style={{ fontSize: 24, fontWeight: "bold" }}>{prefix}</span>
                                 <span style={{ fontSize: 24, fontWeight: "bold" }}>{suffixPart1}</span>
                             </div>

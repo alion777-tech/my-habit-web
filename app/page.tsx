@@ -857,7 +857,7 @@ export default function Home() {
             // Unlock condition: 10 goals achieved
             // goals配列から直接判定 (statsの同期ズレを防ぐため)
           ].concat(
-            goals.filter(g => g.done).length >= 10
+            goals.filter(g => g.done).length >= 50
               ? [{ id: "bucketList", label: "100リスト", icon: "💯" }]
               : []
           ).map((btn) => (
