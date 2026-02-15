@@ -311,7 +311,7 @@ export default function DreamView({
                   alert(`🎉 目標達成おめでとうございます！\nボーナスポイント +100pt 獲得しました！`);
 
                   // 10個達成での機能解禁通知
-                  if (newCount === 10) {
+                  if (newCount === 30) {
                     setTimeout(() => {
                       alert(`🚀 新機能が解禁されました！\n\n「💯 100 LIST (死ぬまでにしたい100のこと)」\n\nがメニューに追加されました。ぜひチェックしてみてください！`);
                     }, 500);

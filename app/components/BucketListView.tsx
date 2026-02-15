@@ -175,7 +175,7 @@ export default function BucketListView({ uid, isDarkMode = false }: Props) {
                             <div
                                 style={{
                                     display: "flex",
-                                    justifyContent: "center",
+                                    justifyContent: "flex-start",
                                     alignItems: "baseline",
                                     gap: 2,
                                     transform: "translateX(10px)", // ←ここ追加
@@ -225,7 +225,7 @@ export default function BucketListView({ uid, isDarkMode = false }: Props) {
                             <div
                                 style={{
                                     display: "flex",
-                                    justifyContent: "center",
+                                    justifyContent: "flex-start",
                                     alignItems: "baseline",
                                     gap: 4,
                                     transform: "translateX(10px)", // ←ここだけ調整（8〜16pxくらいで好み）
