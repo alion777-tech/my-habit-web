@@ -406,31 +406,11 @@ export default function Home() {
         setIsAnonymous(user.isAnonymous);
         updateLastLogin(user.uid); // 最終ログイン更新
       } else {
-        console.log("[Auth] No user found, signing in anonymously...");
-        const { signInAnonymously } = await import("firebase/auth");
-        try {
-          await signInAnonymously(auth);
-        } catch (e) {
-          console.error("[Auth] Anonymous sign in failed:", e);
-          setUid(null);
-          setIsLoading(false);
-          setHabits([]);
-          setSelectedDate(null);
-          setProfile({
-            uid: "",
-            name: "",
-            gender: "",
-            dream: "",
-            isPublic: false,
-            showDream: false,
-            showGoal: false,
-            earnedTitles: [],
-            dreamAchievedCount: 0,
-          });
-          setDreamInput("");
-          setIsEditingDream(false);
-          setTodos([]);
-        }
+        console.log("[Auth] No user found.");
+        setUid(null);
+        setIsAnonymous(false);
+        setIsLoading(false);
+        resetAllData();
       }
     });
   }, []);
@@ -576,7 +556,7 @@ export default function Home() {
 
   // 🏅 称号獲得処理
   const handleAwardTitles = async () => {
-    if (!uid || isLoading) return;
+    if (!uid || isLoading || !profile.name) return;
     const s = profile.stats || {};
     const newTitles: string[] = [...earnedTitles];
     let totalTitleBonus = 0;
@@ -767,10 +747,17 @@ export default function Home() {
         padding: 24,
         boxShadow: isDarkMode ? "0 8px 24px rgba(0,0,0,0.5)" : "0 8px 24px rgba(0,0,0,0.1)",
         transition: "background 0.3s"
-
       }}>
-
         <AuthBox isDarkMode={isDarkMode} />
+
+        {uid === null && !isLoading && (
+          <div style={{ textAlign: "center", marginTop: 20 }}>
+            <p style={{ fontSize: 13, color: isDarkMode ? "#9ca3af" : "#666" }}>
+              ログインしてデータを同期するか、<br />
+              ゲストとして今すぐ開始できます。
+            </p>
+          </div>
+        )}
 
         {/* ユーザープロフィール概要 (AuthBoxのすぐ下、装飾を抑えたデザイン) */}
         {!isLoading && (profile.name || profile.dream) && (

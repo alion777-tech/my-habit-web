@@ -6,6 +6,7 @@ import {
   onAuthStateChanged,
   GoogleAuthProvider,
   signInWithPopup,
+  signInAnonymously,
   linkWithPopup
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
@@ -33,7 +34,19 @@ export default function AuthBox({ isDarkMode = false }: Props) {
       setIsLinking(false);
       setError("");
     } catch (e: any) {
+      console.error("[AuthBox] Google Sign In error:", e);
       setError(e.message);
+    }
+  };
+
+  // ゲストモード（匿名ログイン）で開始
+  const startAsGuest = async () => {
+    try {
+      await signInAnonymously(auth);
+      setError("");
+    } catch (e: any) {
+      console.error("[AuthBox] Guest start error:", e);
+      setError("ゲストモードでの開始に失敗しました。");
     }
   };
 
@@ -143,7 +156,7 @@ export default function AuthBox({ isDarkMode = false }: Props) {
     );
   }
 
-  // ログインフォーム（Googleのみ）
+  // 未ログイン状態の表示（Googleログインかゲスト利用かを選択）
   return (
     <div style={{
       marginBottom: 16,
@@ -152,8 +165,8 @@ export default function AuthBox({ isDarkMode = false }: Props) {
       background: isDarkMode ? "#1f2937" : "#f3f4f6",
       border: isDarkMode ? "1px solid #4b5563" : "1px solid #d1d5db"
     }}>
-      <h3 style={{ fontSize: 14, marginBottom: 12, textAlign: "center", fontWeight: "bold", color: isDarkMode ? "#fff" : "#000" }}>既存のアカウントでログイン</h3>
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <h3 style={{ fontSize: 14, marginBottom: 16, textAlign: "center", fontWeight: "bold", color: isDarkMode ? "#fff" : "#000" }}>ご利用を開始する</h3>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         <button
           onClick={signInWithGoogle}
           style={{
@@ -161,7 +174,7 @@ export default function AuthBox({ isDarkMode = false }: Props) {
             alignItems: "center",
             justifyContent: "center",
             gap: 10,
-            padding: "10px",
+            padding: "12px",
             background: isDarkMode ? "#111827" : "#fff",
             color: isDarkMode ? "#fff" : "#000",
             border: isDarkMode ? "1px solid #4b5563" : "1px solid #d1d5db",
@@ -174,11 +187,26 @@ export default function AuthBox({ isDarkMode = false }: Props) {
           Googleでログイン
         </button>
 
+        <div style={{ display: "flex", alignItems: "center", margin: "8px 0" }}>
+          <div style={{ flex: 1, height: "1px", background: isDarkMode ? "#374151" : "#ccc" }} />
+          <span style={{ padding: "0 10px", fontSize: 11, color: "#888" }}>または</span>
+          <div style={{ flex: 1, height: "1px", background: isDarkMode ? "#374151" : "#ccc" }} />
+        </div>
+
         <button
-          onClick={() => { setIsLinking(false); setError(""); }}
-          style={{ marginTop: 8, background: "none", border: "none", color: isDarkMode ? "#818cf8" : "#4f46e5", cursor: "pointer", fontSize: 12, textDecoration: "underline" }}
+          onClick={startAsGuest}
+          style={{
+            padding: "12px",
+            background: isDarkMode ? "#374151" : "#fff",
+            color: isDarkMode ? "#fff" : "#4b5563",
+            border: isDarkMode ? "1px solid #4b5563" : "1px solid #d1d5db",
+            borderRadius: 8,
+            cursor: "pointer",
+            fontWeight: "bold",
+            fontSize: 14,
+          }}
         >
-          {user?.isAnonymous ? "← 引き継ぎ（匿名モード）に戻る" : "← 戻る"}
+          ゲストとして利用を開始
         </button>
       </div>
 
