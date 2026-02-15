@@ -10,6 +10,16 @@ import {
   deleteGoal as deleteGoalAction,
 } from "@/lib/goalActions";
 
+const UI = {
+  radius: 8,
+  radiusCard: 12,
+  font: 14,      // ← タブに寄せるなら 13、少し大きめなら 14
+  pad: 10,       // ← 入力の高さ（大きくしたいなら 12）
+  btnPadY: 10,   // ← ボタンの縦
+  btnPadX: 16,   // ← ボタンの横
+};
+
+
 type Props = {
   uid: string | null;
   profile: UserProfile;
@@ -69,12 +79,14 @@ export default function DreamView({
               placeholder="あなたの夢を入力してください"
               style={{
                 flex: 1,
-                padding: 10,
-                borderRadius: 8,
+                padding: UI.pad,
+                borderRadius: UI.radius,
                 border: isDarkMode ? "1px solid #4b5563" : "1px solid #ccc",
                 background: isDarkMode ? "#374151" : "#fff",
-                color: isDarkMode ? "#fff" : "#000"
+                color: isDarkMode ? "#fff" : "#000",
+                fontSize: UI.font,
               }}
+
             />
             <button
               onClick={async () => {
@@ -85,7 +97,17 @@ export default function DreamView({
                 setProfile(prev => ({ ...prev, dream: trimmed }));
                 setDreamInput("");
               }}
-              style={{ padding: "8px 16px", borderRadius: 8, background: isDarkMode ? "#6366f1" : "#4f46e5", color: "#fff", border: "none", cursor: "pointer", fontWeight: "bold" }}
+              style={{
+                padding: `${UI.btnPadY}px ${UI.btnPadX}px`,
+                borderRadius: UI.radius,
+                background: isDarkMode ? "#6366f1" : "#4f46e5",
+                color: "#fff",
+                border: "none",
+                cursor: "pointer",
+                fontWeight: "bold",
+                fontSize: UI.font,
+              }}
+
             >
               保存
             </button>
@@ -100,12 +122,14 @@ export default function DreamView({
                   autoFocus
                   style={{
                     flex: 1,
-                    padding: 10,
-                    borderRadius: 8,
+                    padding: UI.pad,
+                    borderRadius: UI.radius,
                     border: isDarkMode ? "1px solid #6366f1" : "1px solid #ccc",
                     background: isDarkMode ? "#374151" : "#fff",
-                    color: isDarkMode ? "#fff" : "#000"
+                    color: isDarkMode ? "#fff" : "#000",
+                    fontSize: UI.font,
                   }}
+
                 />
                 <button
                   onClick={async () => {
@@ -115,20 +139,32 @@ export default function DreamView({
                     setProfile(prev => ({ ...prev, dream: trimmed }));
                     setIsEditingDream(false);
                   }}
-                  style={{ padding: "8px 16px", borderRadius: 8, background: isDarkMode ? "#6366f1" : "#4f46e5", color: "#fff", border: "none", cursor: "pointer", fontWeight: "bold" }}
+                  style={{
+                    padding: `${UI.btnPadY}px ${UI.btnPadX}px`,
+                    borderRadius: UI.radius,
+                    background: isDarkMode ? "#6366f1" : "#4f46e5",
+                    color: "#fff",
+                    border: "none",
+                    cursor: "pointer",
+                    fontWeight: "bold",
+                    fontSize: UI.font,
+                  }}
+
                 >
                   更新
                 </button>
                 <button
                   onClick={() => setIsEditingDream(false)}
                   style={{
-                    padding: "8px 16px",
-                    borderRadius: 8,
+                    padding: `${UI.btnPadY}px ${UI.btnPadX}px`,
+                    borderRadius: UI.radius,
                     background: isDarkMode ? "#4b5563" : "#e5e7eb",
                     color: isDarkMode ? "#fff" : "#000",
                     border: "none",
-                    cursor: "pointer"
+                    cursor: "pointer",
+                    fontSize: UI.font,
                   }}
+
                 >
                   キャンセル
                 </button>
@@ -140,9 +176,9 @@ export default function DreamView({
                   setIsEditingDream(true);
                 }}
                 style={{
-                  padding: "8px 16px",
+                  padding: `${UI.btnPadY}px ${UI.btnPadX}px`,
                   background: isDarkMode ? "#2e1065" : "#f5f3ff",
-                  borderRadius: 12,
+                  borderRadius: UI.radiusCard,
                   border: isDarkMode ? "2px dashed #a855f7" : "1px dashed #c084fc",
                   cursor: "pointer",
                   textAlign: "center"
@@ -168,12 +204,14 @@ export default function DreamView({
             onChange={(e) => setGoalInput(e.target.value)}
             placeholder="次に達成したい具体的な目標"
             style={{
-              padding: 10,
-              borderRadius: 8,
+              padding: UI.pad,
+              borderRadius: UI.radius,
               border: isDarkMode ? "1px solid #4b5563" : "1px solid #ccc",
               background: isDarkMode ? "#374151" : "#fff",
-              color: isDarkMode ? "#fff" : "#000"
+              color: isDarkMode ? "#fff" : "#000",
+              fontSize: UI.font,
             }}
+
           />
           <div style={{ display: "flex", gap: 8 }}>
             <input
@@ -182,12 +220,14 @@ export default function DreamView({
               onChange={(e) => setDeadline(e.target.value)}
               style={{
                 flex: 1,
-                padding: 10,
-                borderRadius: 8,
+                padding: UI.pad,
+                borderRadius: UI.radius,
                 border: isDarkMode ? "1px solid #4b5563" : "1px solid #ccc",
                 background: isDarkMode ? "#374151" : "#fff",
-                color: isDarkMode ? "#fff" : "#000"
+                color: isDarkMode ? "#fff" : "#000",
+                fontSize: UI.font,
               }}
+
             />
             <button
               onClick={async () => {
@@ -200,7 +240,17 @@ export default function DreamView({
                 setGoalInput("");
                 setDeadline("");
               }}
-              style={{ padding: "10px 24px", borderRadius: 8, background: "#10b981", color: "#fff", border: "none", cursor: "pointer", fontWeight: "bold" }}
+              style={{
+                padding: `${UI.btnPadY}px ${UI.btnPadX + 8}px`, // 少し横広め
+                borderRadius: UI.radius,
+                background: "#10b981",
+                color: "#fff",
+                border: "none",
+                cursor: "pointer",
+                fontWeight: "bold",
+                fontSize: UI.font,
+              }}
+
             >
               目標を追加
             </button>
