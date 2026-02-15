@@ -5,6 +5,14 @@ import React from "react";
 import type { Todo } from "@/types/appTypes";
 import { addTodo, toggleTodo, deleteTodo, updateTodo } from "@/lib/todoActions";
 
+const UI = {
+  radius: 8,
+  font: 13,        // ← 上のタブが 13 なので合わせる
+  inputPad: 10,    // ← 入力欄の高さ（大きくしたければ 12）
+  btnPad: 10,      // ← 追加ボタンの高さ（大きくしたければ 12）
+};
+
+
 type Props = {
   uid: string | null;
 
@@ -37,7 +45,10 @@ export default function TodoView({
 }: Props) {
   return (
     <div>
-      <h2 style={{ fontSize: 20, marginBottom: 16, color: isDarkMode ? "#fff" : "#000" }}>📝 ToDo</h2>
+      <h2 style={{ fontSize: 18, marginBottom: 16, color: isDarkMode ? "#fff" : "#000" }}>
+        📝 ToDo
+      </h2>
+
 
       {/* 入力 */}
       <input
@@ -46,13 +57,15 @@ export default function TodoView({
         placeholder="やることを書く"
         style={{
           width: "100%",
-          padding: 12,
+          padding: UI.inputPad,
           marginBottom: 12,
-          borderRadius: 8,
+          borderRadius: UI.radius,
           border: isDarkMode ? "1px solid #4b5563" : "1px solid #ccc",
           background: isDarkMode ? "#374151" : "#fff",
           color: isDarkMode ? "#fff" : "#000",
+          fontSize: UI.font,
         }}
+
       />
 
       <div style={{ display: "flex", gap: 8 }}>
@@ -68,15 +81,16 @@ export default function TodoView({
           }}
           style={{
             flex: 1,
-            padding: 12,
+            padding: UI.btnPad,
             background: isDarkMode ? "#6366f1" : "#4f46e5",
             color: "#fff",
             border: "none",
-            borderRadius: 8,
-            fontSize: 16,
+            borderRadius: UI.radius,
+            fontSize: UI.font,
             fontWeight: "bold",
-            cursor: "pointer"
+            cursor: "pointer",
           }}
+
         >
           追加
         </button>
@@ -140,6 +154,7 @@ export default function TodoView({
                     marginLeft: 10,
                     cursor: "pointer",
                     fontWeight: "500",
+                    fontSize: UI.font,
                     color: isDarkMode ? "#f3f4f6" : "#1f2937"
                   }}
                   onDoubleClick={() => {
@@ -203,7 +218,8 @@ export default function TodoView({
                 flex: 1,
                 marginLeft: 10,
                 textDecoration: "line-through",
-                color: isDarkMode ? "#9ca3af" : "#888"
+                color: isDarkMode ? "#9ca3af" : "#888",
+                fontSize: UI.font,
               }}>
                 {t.text}
               </span>
