@@ -268,7 +268,7 @@ export default function DreamView({
                   }
 
                   const { updateRecentAction } = await import("@/lib/socialActions");
-                  await updateRecentAction(uid, `目標「${g.title}」`, "goal");
+                  await updateRecentAction(uid, g.title, "goal");
                 }
               }}
               style={{ width: 18, height: 18, cursor: "pointer" }}

@@ -240,7 +240,17 @@ export default function FriendView({ uid, currentUserName, isDarkMode = false }:
     // 🕒 ログイン日数のフォーマット (一日単位)
     const formatLastLogin = (lastLogin: any) => {
         if (!lastLogin) return null;
-        const date = lastLogin.toDate ? lastLogin.toDate() : new Date(lastLogin);
+        let date: Date;
+        if (lastLogin.toDate) {
+            date = lastLogin.toDate();
+        } else if (typeof lastLogin === "number" || typeof lastLogin === "string") {
+            date = new Date(lastLogin);
+        } else if (lastLogin instanceof Date) {
+            date = lastLogin;
+        } else {
+            return null;
+        }
+
         const now = new Date();
         const diffTime = Math.abs(now.getTime() - date.getTime());
         const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
@@ -256,6 +266,24 @@ export default function FriendView({ uid, currentUserName, isDarkMode = false }:
         const isMe = user.uid === uid;
         const loginStatus = user.showLastLogin ? formatLastLogin(user.lastLoginAt) : null;
 
+        if (showActivity && user.recentAction) {
+            return (
+                <div style={{
+                    marginBottom: 10,
+                    padding: "12px 16px",
+                    background: isDarkMode ? "rgba(99,102,241,0.1)" : "#f5f3ff",
+                    borderLeft: "4px solid #6366f1",
+                    borderRadius: 8,
+                    fontSize: 13,
+                    color: isDarkMode ? "#a5b4fc" : "#4338ca",
+                    fontWeight: "bold",
+                    boxShadow: isDarkMode ? "0 2px 4px rgba(0,0,0,0.2)" : "0 1px 2px rgba(0,0,0,0.05)"
+                }}>
+                    📢 {user.name}が {user.recentAction.type === "dream" ? "夢" : "目標"}：{user.recentAction.text} を達成しました！
+                </div>
+            );
+        }
+
         return (
             <div style={{
                 padding: 12,
@@ -264,20 +292,6 @@ export default function FriendView({ uid, currentUserName, isDarkMode = false }:
                 marginBottom: 10,
                 border: isDarkMode ? "1px solid #374151" : "1px solid #eee",
             }}>
-                {showActivity && user.recentAction && (
-                    <div style={{
-                        marginBottom: 10,
-                        padding: "8px 12px",
-                        background: isDarkMode ? "rgba(99,102,241,0.1)" : "#f5f3ff",
-                        borderLeft: "4px solid #6366f1",
-                        borderRadius: "0 8px 8px 0",
-                        fontSize: 12,
-                        color: isDarkMode ? "#a5b4fc" : "#4338ca",
-                        fontWeight: "bold"
-                    }}>
-                        📢 {user.name}が {user.recentAction.type === "dream" ? "夢" : "目標"}：{user.recentAction.text} を達成しました！
-                    </div>
-                )}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div style={{ flex: 1 }}>
                         <div style={{ fontWeight: "bold", fontSize: 14, color: isDarkMode ? "#fff" : "#000", display: "flex", alignItems: "center", gap: 4 }}>
