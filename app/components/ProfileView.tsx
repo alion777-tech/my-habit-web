@@ -1,5 +1,15 @@
 import type { UserProfile } from "@/types/appTypes";
 
+const UI = {
+  radius: 8,
+  radiusCard: 12,
+  font: 14,      // 13にするとタブ寄り、14は少し読みやすい
+  label: 13,
+  pad: 12,       // 入力の高さ（大きくしたいなら 14）
+  btnPad: 14,    // 保存ボタンの高さ
+};
+
+
 type Props = {
   uid: string | null;
   profile: UserProfile;
@@ -14,7 +24,7 @@ export default function ProfileView({ uid, profile, setProfile, onSave, isDarkMo
       style={{
         padding: "20px 16px",
         background: isDarkMode ? "#1f2937" : "#f9f9f9",
-        borderRadius: 12,
+        borderRadius: UI.radiusCard,
         marginTop: 12,
         border: isDarkMode ? "1px solid #374151" : "1px solid #eee",
       }}
@@ -29,12 +39,14 @@ export default function ProfileView({ uid, profile, setProfile, onSave, isDarkMo
           onChange={(e) => setProfile({ ...profile, name: e.target.value })}
           style={{
             width: "100%",
-            padding: 12,
-            borderRadius: 8,
+            padding: UI.pad,
+            borderRadius: UI.radius,
             border: isDarkMode ? "1px solid #4b5563" : "1px solid #ccc",
             background: isDarkMode ? "#374151" : "#fff",
-            color: isDarkMode ? "#fff" : "#000"
+            color: isDarkMode ? "#fff" : "#000",
+            fontSize: UI.font,
           }}
+
         />
       </div>
 
@@ -45,8 +57,9 @@ export default function ProfileView({ uid, profile, setProfile, onSave, isDarkMo
             onClick={() => setProfile({ ...profile, gender: "male" })}
             style={{
               flex: 1,
-              padding: "12px",
-              borderRadius: 8,
+              padding: UI.pad,
+              borderRadius: UI.radius,
+              fontSize: UI.font,
               border: profile.gender === "male"
                 ? `2px solid ${isDarkMode ? "#60a5fa" : "#3b82f6"}`
                 : `1px solid ${isDarkMode ? "#4b5563" : "#ddd"}`,
@@ -67,8 +80,9 @@ export default function ProfileView({ uid, profile, setProfile, onSave, isDarkMo
             onClick={() => setProfile({ ...profile, gender: "female" })}
             style={{
               flex: 1,
-              padding: "12px",
-              borderRadius: 8,
+              padding: UI.pad,
+              borderRadius: UI.radius,
+              fontSize: UI.font,
               border: profile.gender === "female"
                 ? `2px solid ${isDarkMode ? "#f472b6" : "#f472b6"}`
                 : `1px solid ${isDarkMode ? "#4b5563" : "#ddd"}`,
@@ -112,9 +126,9 @@ export default function ProfileView({ uid, profile, setProfile, onSave, isDarkMo
             display: "flex",
             flexDirection: "column",
             gap: 12,
-            padding: "12px",
+            padding: UI.pad,
             background: isDarkMode ? "#111827" : "#fff",
-            borderRadius: 8,
+            borderRadius: UI.radius,
             border: isDarkMode ? "1px solid #374151" : "1px solid #eee"
           }}>
             <label style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, cursor: "pointer", color: isDarkMode ? "#d1d5db" : "#4b5563" }}>
@@ -151,15 +165,15 @@ export default function ProfileView({ uid, profile, setProfile, onSave, isDarkMo
           await onSave();
         }}
         style={{
-          padding: "14px",
-          borderRadius: 8,
+          padding: UI.btnPad,
+          borderRadius: UI.radius,
           border: "none",
           background: isDarkMode ? "#6366f1" : "#4f46e5",
           color: "#fff",
           fontWeight: "bold",
           cursor: "pointer",
           width: "100%",
-          fontSize: 16,
+          fontSize: UI.font,
           boxShadow: isDarkMode ? "0 4px 6px -1px rgba(0, 0, 0, 0.3)" : "none"
         }}
       >
