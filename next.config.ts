@@ -1,14 +1,13 @@
 import type { NextConfig } from "next";
-import withPWA from "next-pwa";
 
-const nextConfig: NextConfig = {
-  // ここは必要なら今後追加してOK
-};
-
-export default withPWA({
+// next-pwa は require で読むのが一番安定
+const withPWA = require("next-pwa")({
   dest: "public",
   register: true,
   skipWaiting: true,
-  // 開発中はPWAを切って混乱を減らす（本番だけON）
   disable: process.env.NODE_ENV === "development",
-})(nextConfig);
+});
+
+const nextConfig: NextConfig = {};
+
+export default withPWA(nextConfig);
