@@ -57,7 +57,7 @@ export default function DreamView({
 }: Props) {
   return (
     <div>
-      <h2 style={{ fontSize: 20, marginBottom: 16, color: isDarkMode ? "#fff" : "#000" }}>🌈 私の夢</h2>
+      <h2 style={{ fontSize: 16, marginBottom: 16, color: isDarkMode ? "#fff" : "#000" }}>🌈 私の夢</h2>
 
       {/* 夢のセクション */}
       <div style={{ marginBottom: 16 }}>
@@ -148,7 +148,7 @@ export default function DreamView({
                   textAlign: "center"
                 }}
               >
-                <p style={{ fontSize: 20, fontWeight: "bold", color: isDarkMode ? "#e9d5ff" : "#6d28d9", margin: 0 }}>
+                <p style={{ fontSize: 16, fontWeight: "bold", color: isDarkMode ? "#e9d5ff" : "#6d28d9", margin: 0 }}>
                   “{profile.dream}”
                 </p>
               </div>
@@ -266,6 +266,9 @@ export default function DreamView({
                       alert(`🚀 新機能が解禁されました！\n\n「💯 100 LIST (死ぬまでにしたい100のこと)」\n\nがメニューに追加されました。ぜひチェックしてみてください！`);
                     }, 500);
                   }
+
+                  const { updateRecentAction } = await import("@/lib/socialActions");
+                  await updateRecentAction(uid, `目標「${g.title}」`, "goal");
                 }
               }}
               style={{ width: 18, height: 18, cursor: "pointer" }}

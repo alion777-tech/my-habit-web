@@ -52,6 +52,9 @@ export const getUserProfile = async (uid: string): Promise<UserProfile | null> =
       dreamAchievedCount: profileData.dreamAchievedCount ?? 0,
       // lastLoginAt は statusData から優先的に取得
       lastLoginAt: statusData.lastLoginAt ?? profileData.lastLoginAt ?? null,
+      showLastLogin: !!profileData.showLastLogin,
+      following: profileData.following ?? [],
+      recentAction: profileData.recentAction ?? null,
     };
   } catch (e) {
     console.error(`[getUserProfile] Fatal error reading profile for ${uid}:`, e);

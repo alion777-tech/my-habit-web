@@ -62,6 +62,7 @@ export default function Home() {
   const [editingTodoText, setEditingTodoText] = useState("");
   const [earnedTitles, setEarnedTitles] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAnonymous, setIsAnonymous] = useState(false);
 
   const playCharing = () => {
     try {
@@ -118,7 +119,8 @@ export default function Home() {
     }
 
     console.log("[ProfileSync] starting snapshot for:", uid);
-    setIsLoading(true);
+    // すでにプロフィールがある場合は loading を true にしない（ちらつき防止）
+    if (!profile.uid) setIsLoading(true);
 
     const unsub = onSnapshot(doc(db, "users", uid), async (snap) => {
       try {
@@ -138,6 +140,7 @@ export default function Home() {
           }
 
           const p: UserProfile = {
+            ...data, // 既存のフィールドを維持 (stats等)
             uid: uid,
             name: data.name ?? "",
             gender: data.gender ?? "",
@@ -150,7 +153,17 @@ export default function Home() {
             lastLoginAt: lastLoginAt ?? null,
           };
           console.log("[ProfileSync] data received at users/", uid);
-          setProfile(p);
+
+          setProfile(prev => {
+            const merged = { ...prev, ...p };
+            if (p.name === "" && prev.name !== "") {
+              merged.name = prev.name;
+            }
+            if (p.gender === "" && prev.gender !== "") {
+              merged.gender = prev.gender;
+            }
+            return merged;
+          });
           setEarnedTitles(p.earnedTitles);
         } else {
           console.log("[ProfileSync] document does not exist yet at users/", uid);
@@ -338,6 +351,8 @@ export default function Home() {
           dream: "",
           dreamAchievedCount: (profile.dreamAchievedCount || 0) + 1,
         });
+        const { updateRecentAction } = await import("@/lib/socialActions");
+        await updateRecentAction(uid, profile.dream, "dream");
       }
     } else {
       // 目標リセット
@@ -349,6 +364,8 @@ export default function Home() {
           dream: "",
           dreamAchievedCount: (profile.dreamAchievedCount || 0) + 1,
         });
+        const { updateRecentAction } = await import("@/lib/socialActions");
+        await updateRecentAction(uid, profile.dream, "dream");
       }
     }
   };
@@ -373,6 +390,7 @@ export default function Home() {
       if (user) {
         console.log("[Auth] User logged in:", user.uid, user.isAnonymous ? "(Anonymous)" : "(Permanent)");
         setUid(user.uid);
+        setIsAnonymous(user.isAnonymous);
         updateLastLogin(user.uid); // 最終ログイン更新
       } else {
         console.log("[Auth] No user found, signing in anonymously...");
@@ -502,6 +520,7 @@ export default function Home() {
         isPublic: !!profile.isPublic,
         showDream: !!profile.showDream,
         showGoal: !!profile.showGoal,
+        showLastLogin: !!profile.showLastLogin,
       };
       await saveUserProfile(uid, updateData);
       alert("プロフィールを保存しました");
@@ -695,7 +714,7 @@ export default function Home() {
       saveUserProfile(uid, { stats: newStats, firstLoginAt });
       handleAwardTitles();
     }
-  }, [uid, profile.name, yesterdayStr]);
+  }, [uid, (profile.stats?.loginDays || 0), yesterdayStr, isLoading]);
 
   const visibleHabits = habits.filter(h => {
     if (h.type === "daily") return true;
@@ -732,6 +751,97 @@ export default function Home() {
 
         <AuthBox isDarkMode={isDarkMode} />
 
+        {/* ユーザープロフィール概要 (AuthBoxのすぐ下、装飾を抑えたデザイン) */}
+        {!isLoading && (profile.name || profile.dream) && (
+          <div style={{ marginBottom: 16 }}>
+            {profile.name && (
+              <div
+                style={{
+                  fontSize: 16,
+                  fontWeight: "bold",
+                  marginBottom: 8,
+                  display: "flex",
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                  gap: 8,
+                  color: isDarkMode ? "#fff" : "#000",
+                }}
+              >
+                <span style={{
+                  color: profile.gender === "female" ? "#f472b6" : profile.gender === "male" ? "#3b82f6" : (isDarkMode ? "#9ca3af" : "#000"),
+                  fontSize: "1.2em"
+                }}>
+                  {profile.gender === "female" ? "👩" : profile.gender === "male" ? "👨" : "👤"}
+                </span>
+                {profile.name}
+                {profile.dreamAchievedCount && profile.dreamAchievedCount > 0 ? (
+                  <span style={{
+                    fontSize: 11,
+                    color: isDarkMode ? "#fbbf24" : "#d97706",
+                    background: isDarkMode ? "#451a03" : "#fffbeb",
+                    padding: "2px 8px",
+                    borderRadius: 20,
+                    border: isDarkMode ? "1px solid #92400e" : "1px solid #fcd34d",
+                    fontWeight: "bold"
+                  }}>
+                    🎖️ x{profile.dreamAchievedCount}
+                  </span>
+                ) : null}
+              </div>
+            )}
+
+            {profile.dream && (
+              <div
+                onMouseDown={startLongPress}
+                onMouseUp={cancelLongPress}
+                onMouseLeave={cancelLongPress}
+                onTouchStart={startLongPress}
+                onTouchEnd={cancelLongPress}
+                style={{
+                  padding: "6px 12px",
+                  background: isPressing
+                    ? (isDarkMode ? "#064e3b" : "#dcfce7")
+                    : (isDarkMode ? "#1e1b4b" : "#eef2ff"),
+                  borderRadius: 8,
+                  fontWeight: "bold",
+                  fontSize: 13,
+                  cursor: "pointer",
+                  userSelect: "none",
+                  transition: "all 0.3s",
+                  border: isPressing
+                    ? `2px solid ${isDarkMode ? "#22c55e" : "#22c55e"}`
+                    : `1px solid ${isDarkMode ? "#4338ca" : "#c7d2fe"}`,
+                  position: "relative",
+                  overflow: "hidden",
+                  boxShadow: isDarkMode ? "0 4px 12px rgba(0,0,0,0.3)" : "none",
+                  color: isDarkMode ? "#fff" : "#1e40af"
+                }}
+              >
+                {isPressing && (
+                  <div style={{
+                    position: "absolute",
+                    bottom: 0,
+                    left: 0,
+                    height: 4,
+                    background: "#22c55e",
+                    width: "100%",
+                    animation: "progress 10s linear"
+                  }} />
+                )}
+                🌈 夢：{profile.dream}
+                {isPressing && <div style={{ fontSize: 10, color: isDarkMode ? "#86efac" : "#166534", marginTop: 4 }}>そのまま10秒キープで達成！</div>}
+              </div>
+            )}
+          </div>
+        )}
+
+        <style jsx>{`
+          @keyframes progress {
+            from { width: 0%; }
+            to { width: 100%; }
+          }
+        `}</style>
+
         {/* 環境表示インジケーター */}
         <div
           style={{
@@ -754,228 +864,149 @@ export default function Home() {
           {isDev ? "🔧 開発環境" : "🚀 本番環境"} | Project: {process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}
         </div>
 
-        {isLoading ? (
+        {/* ===== ナビゲーションボタン (Loading外に出して安定させる) ===== */}
+        {uid && (
+          <>
+            <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+              {[
+                { id: "habit", label: "習慣", icon: "🔥" },
+                { id: "dream", label: "夢・目標", icon: "🌈" },
+                { id: "todo", label: "ToDo", icon: "📝" },
+                { id: "bucketList", label: "100リスト", icon: "💯" },
+              ].map((btn) => {
+                const isLocked = btn.id === "bucketList" && goals.filter(g => g.done).length < 50;
+                return (
+                  <button
+                    key={btn.id}
+                    onClick={() => !isLocked && setView(btn.id as any)}
+                    style={{
+                      flex: 1,
+                      padding: "10px 4px",
+                      background: isLocked
+                        ? (isDarkMode ? "#374151" : "#d1d5db")
+                        : (view === btn.id ? "#4f46e5" : (isDarkMode ? "transparent" : "#e5e7eb")),
+                      color: isLocked
+                        ? (isDarkMode ? "#9ca3af" : "#6b7280")
+                        : (view === btn.id ? "#fff" : (isDarkMode ? "#fff" : "#374151")),
+                      border: view === btn.id ? "none" : (isDarkMode ? "1.5px solid #fff" : "none"),
+                      borderRadius: 8,
+                      fontWeight: "bold",
+                      fontSize: 13,
+                      cursor: isLocked ? "not-allowed" : "pointer",
+                      transition: "all 0.2s",
+                      opacity: isLocked ? 0.6 : 1,
+                    }}
+                    disabled={isLocked}
+                  >
+                    {btn.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+              {[
+                { id: "history", label: "履歴", icon: "📈" },
+                { id: "stats", label: "達成率", icon: "📊" },
+                { id: "title", label: "称号", icon: "🏅" },
+              ].map((btn) => (
+                <button
+                  key={btn.id}
+                  onClick={() => setView(btn.id as any)}
+                  style={{
+                    flex: 1,
+                    padding: "10px 4px",
+                    background: view === btn.id ? "#4f46e5" : (isDarkMode ? "transparent" : "#e5e7eb"),
+                    color: view === btn.id ? "#fff" : (isDarkMode ? "#fff" : "#374151"),
+                    border: view === btn.id ? "none" : (isDarkMode ? "1.5px solid #fff" : "none"),
+                    borderRadius: 8,
+                    fontWeight: "bold",
+                    fontSize: 13,
+                    cursor: "pointer",
+                    transition: "all 0.2s"
+                  }}
+                >
+                  {btn.label}
+                </button>
+              ))}
+              <button
+                onClick={() => window.open("https://note.com/alion777/n/nba6274e5055b", "_blank")}
+                style={{
+                  flex: 1,
+                  padding: "10px 4px",
+                  background: isDarkMode ? "transparent" : "#e5e7eb",
+                  color: isDarkMode ? "#fff" : "#374151",
+                  border: isDarkMode ? "1.5px solid #fff" : "none",
+                  borderRadius: 8,
+                  fontWeight: "bold",
+                  fontSize: 13,
+                  cursor: "pointer",
+                  transition: "all 0.2s"
+                }}
+              >
+                📖 使い方
+              </button>
+            </div>
+
+            <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+              <button
+                onClick={() => setView("profile")}
+                style={{
+                  flex: 1,
+                  padding: "10px 4px",
+                  background: view === "profile" ? "#4f46e5" : (isDarkMode ? "transparent" : "#e5e7eb"),
+                  color: view === "profile" ? "#fff" : (isDarkMode ? "#fff" : "#374151"),
+                  border: view === "profile" ? "none" : (isDarkMode ? "1.5px solid #fff" : "none"),
+                  borderRadius: 8,
+                  fontWeight: "bold",
+                  fontSize: 13,
+                  cursor: "pointer",
+                  transition: "all 0.2s"
+                }}
+              >
+                👤 プロフ
+              </button>
+              <button
+                onClick={() => !isAnonymous && setView("friend")}
+                disabled={isAnonymous}
+                style={{
+                  flex: 1,
+                  padding: "10px 4px",
+                  background: isAnonymous
+                    ? (isDarkMode ? "#374151" : "#d1d5db")
+                    : (view === "friend" ? "#4f46e5" : (isDarkMode ? "transparent" : "#e5e7eb")),
+                  color: isAnonymous
+                    ? (isDarkMode ? "#9ca3af" : "#6b7280")
+                    : (view === "friend" ? "#fff" : (isDarkMode ? "#fff" : "#374151")),
+                  border: view === "friend" ? "none" : (isDarkMode ? "1.5px solid #fff" : "none"),
+                  borderRadius: 8,
+                  fontWeight: "bold",
+                  fontSize: 13,
+                  cursor: isAnonymous ? "not-allowed" : "pointer",
+                  transition: "all 0.2s",
+                  opacity: isAnonymous ? 0.6 : 1,
+                }}
+              >
+                🤝 フレンド
+              </button>
+            </div>
+            <div style={{
+              fontSize: 14,
+              marginBottom: 16,
+              color: isDarkMode ? "#fbbf24" : "#444",
+              fontWeight: "bold"
+            }}>
+              🏆 累計獲得ポイント：{totalPoint} pt
+            </div>
+          </>
+        )}
+
+        {isLoading && (
           <div style={{ padding: 40, textAlign: "center", color: "#6366f1", fontWeight: "bold" }}>
             <div style={{ fontSize: 24, marginBottom: 8 }}>🔄</div>
             データを読み込み中...
           </div>
-        ) : (
-          <>
-            {profile.name && (
-              <div
-                style={{
-                  fontSize: 18,
-                  fontWeight: "bold",
-                  marginBottom: 16,
-                  display: "flex",
-                  alignItems: "center",
-                  flexWrap: "wrap",
-                  gap: 8,
-                  color: isDarkMode ? "#fff" : "#000"
-                }}
-              >
-                <span style={{
-                  color: profile.gender === "female" ? "#f472b6" : profile.gender === "male" ? "#3b82f6" : (isDarkMode ? "#9ca3af" : "#000"),
-                  fontSize: "1.2em"
-                }}>
-                  {profile.gender === "female" ? "👩" : profile.gender === "male" ? "👨" : "👤"}
-                </span>
-                {profile.name}
-                {profile.dreamAchievedCount && profile.dreamAchievedCount > 0 ? (
-                  <span style={{
-                    fontSize: 11,
-                    color: isDarkMode ? "#fbbf24" : "#d97706",
-                    background: isDarkMode ? "#451a03" : "#fffbeb",
-                    padding: "2px 8px",
-                    borderRadius: 20,
-                    border: isDarkMode ? "1px solid #92400e" : "1px solid #fcd34d",
-                    fontWeight: "bold"
-                  }}>
-                    🎖️ 夢達成 x{profile.dreamAchievedCount}
-                  </span>
-                ) : null}
-              </div>
-            )}
-
-            {profile.dream && (
-              <div
-                onMouseDown={startLongPress}
-                onMouseUp={cancelLongPress}
-                onMouseLeave={cancelLongPress}
-                onTouchStart={startLongPress}
-                onTouchEnd={cancelLongPress}
-                style={{
-                  marginBottom: 20,
-                  padding: 16,
-                  background: isPressing
-                    ? (isDarkMode ? "#064e3b" : "#dcfce7")
-                    : (isDarkMode ? "#1e1b4b" : "#eef2ff"),
-                  borderRadius: 12,
-                  fontWeight: "bold",
-                  cursor: "pointer",
-                  userSelect: "none",
-                  transition: "all 0.3s",
-                  border: isPressing
-                    ? `2px solid ${isDarkMode ? "#22c55e" : "#22c55e"}`
-                    : `1px solid ${isDarkMode ? "#4338ca" : "#c7d2fe"}`,
-                  position: "relative",
-                  overflow: "hidden",
-                  boxShadow: isDarkMode ? "0 4px 12px rgba(0,0,0,0.3)" : "none"
-                }}
-              >
-                {isPressing && (
-                  <div style={{
-                    position: "absolute",
-                    bottom: 0,
-                    left: 0,
-                    height: 4,
-                    background: "#22c55e",
-                    width: "100%",
-                    animation: "progress 10s linear"
-                  }} />
-                )}
-                🌈 夢：{profile.dream}
-                {isPressing && <div style={{ fontSize: 10, color: isDarkMode ? "#86efac" : "#166534", marginTop: 4 }}>そのまま10秒キープで達成！</div>}
-              </div>
-            )}
-
-            <style jsx>{`
-              @keyframes progress {
-                from { width: 0%; }
-                to { width: 100%; }
-              }
-            `}</style>
-          </>
         )}
-
-        {/* ===== ナビゲーションボタン ===== */}
-        <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-          {[
-            { id: "habit", label: "習慣", icon: "🔥" },
-            { id: "dream", label: "夢・目標", icon: "🌈" },
-            { id: "todo", label: "ToDo", icon: "📝" },
-            { id: "bucketList", label: "100リスト", icon: "💯" },
-          ].map((btn) => {
-            const isLocked = btn.id === "bucketList" && goals.filter(g => g.done).length < 50;
-            return (
-              <button
-                key={btn.id}
-                onClick={() => !isLocked && setView(btn.id as any)}
-                style={{
-                  flex: 1,
-                  padding: "10px 4px",
-                  background: isLocked
-                    ? (isDarkMode ? "#374151" : "#d1d5db")
-                    : (view === btn.id ? "#4f46e5" : (isDarkMode ? "transparent" : "#e5e7eb")),
-                  color: isLocked
-                    ? (isDarkMode ? "#9ca3af" : "#6b7280")
-                    : (view === btn.id ? "#fff" : (isDarkMode ? "#fff" : "#374151")),
-                  border: view === btn.id ? "none" : (isDarkMode ? "1.5px solid #fff" : "none"),
-                  borderRadius: 8,
-                  fontWeight: "bold",
-                  fontSize: 13,
-                  cursor: isLocked ? "not-allowed" : "pointer",
-                  transition: "all 0.2s",
-                  opacity: isLocked ? 0.6 : 1,
-                }}
-                disabled={isLocked}
-              >
-                {btn.label}
-              </button>
-            );
-          })}
-        </div>
-
-        <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-          {[
-            { id: "history", label: "履歴", icon: "📈" },
-            { id: "stats", label: "達成率", icon: "📊" },
-            { id: "title", label: "称号", icon: "🏅" },
-          ].map((btn) => (
-            <button
-              key={btn.id}
-              onClick={() => setView(btn.id as any)}
-              style={{
-                flex: 1,
-                padding: "10px 4px",
-                background: view === btn.id ? "#4f46e5" : (isDarkMode ? "transparent" : "#e5e7eb"),
-                color: view === btn.id ? "#fff" : (isDarkMode ? "#fff" : "#374151"),
-                border: view === btn.id ? "none" : (isDarkMode ? "1.5px solid #fff" : "none"),
-                borderRadius: 8,
-                fontWeight: "bold",
-                fontSize: 13,
-                cursor: "pointer",
-                transition: "all 0.2s"
-              }}
-            >
-              {btn.label}
-            </button>
-          ))}
-          <button
-            onClick={() => window.open("https://note.com/alion777/n/nba6274e5055b", "_blank")}
-            style={{
-              flex: 1,
-              padding: "10px 4px",
-              background: isDarkMode ? "transparent" : "#e5e7eb",
-              color: isDarkMode ? "#fff" : "#374151",
-              border: isDarkMode ? "1.5px solid #fff" : "none",
-              borderRadius: 8,
-              fontWeight: "bold",
-              fontSize: 13,
-              cursor: "pointer",
-              transition: "all 0.2s"
-            }}
-          >
-            📖 使い方
-          </button>
-        </div>
-
-        <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
-          <button
-            onClick={() => setView("profile")}
-            style={{
-              flex: 1,
-              padding: "10px 4px",
-              background: view === "profile" ? "#4f46e5" : (isDarkMode ? "transparent" : "#e5e7eb"),
-              color: view === "profile" ? "#fff" : (isDarkMode ? "#fff" : "#374151"),
-              border: view === "profile" ? "none" : (isDarkMode ? "1.5px solid #fff" : "none"),
-              borderRadius: 8,
-              fontWeight: "bold",
-              fontSize: 13,
-              cursor: "pointer",
-              transition: "all 0.2s"
-            }}
-          >
-            👤 プロフ
-          </button>
-          <button
-            onClick={() => setView("friend")}
-            style={{
-              flex: 1,
-              padding: "10px 4px",
-              background: view === "friend" ? "#4f46e5" : (isDarkMode ? "transparent" : "#e5e7eb"),
-              color: view === "friend" ? "#fff" : (isDarkMode ? "#fff" : "#374151"),
-              border: view === "friend" ? "none" : (isDarkMode ? "1.5px solid #fff" : "none"),
-              borderRadius: 8,
-              fontWeight: "bold",
-              fontSize: 13,
-              cursor: "pointer",
-              transition: "all 0.2s"
-            }}
-          >
-            🤝 フレンド
-          </button>
-        </div>
-
-        <div style={{
-          fontSize: 14,
-          marginBottom: 16,
-          color: isDarkMode ? "#fbbf24" : "#444",
-          fontWeight: "bold"
-        }}>
-          🏆 累計獲得ポイント：{totalPoint} pt
-        </div>
-
 
         {view === "habit" && (
           <HabitView
@@ -1103,13 +1134,7 @@ export default function Home() {
           />
         )}
 
-
       </div>
-
-
-
-
-
     </main>
   );
 }

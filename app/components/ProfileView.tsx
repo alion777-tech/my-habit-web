@@ -133,6 +133,14 @@ export default function ProfileView({ uid, profile, setProfile, onSave, isDarkMo
               />
               現在の目標を公開する
             </label>
+            <label style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, cursor: "pointer", color: isDarkMode ? "#d1d5db" : "#4b5563" }}>
+              <input
+                type="checkbox"
+                checked={profile.showLastLogin}
+                onChange={(e) => setProfile({ ...profile, showLastLogin: e.target.checked })}
+              />
+              最終ログイン日時を公開する
+            </label>
           </div>
         )}
       </div>

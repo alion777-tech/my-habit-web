@@ -1,17 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, onSnapshot, query, orderBy, limit, getDocs, where } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { auth } from "@/lib/firebase";
 import {
     searchUsers,
-    sendFriendRequest,
-    acceptFriendRequest,
-    rejectFriendRequest,
-    removeFriend
-} from "@/lib/friendActions";
-import { getUserProfile } from "@/lib/profileActions";
-import type { UserProfile, Goal } from "@/types/appTypes";
+    followUser,
+    unfollowUser,
+    getFollowingUsers,
+    getFollowersUsers
+} from "@/lib/socialActions";
+import { saveUserProfile } from "@/lib/profileActions";
+import type { UserProfile } from "@/types/appTypes";
 
 type Props = {
     uid: string | null;
@@ -19,90 +18,47 @@ type Props = {
     isDarkMode?: boolean;
 };
 
-type FriendRequest = {
-    fromUid: string;
-    fromName: string;
-    createdAt: any;
-};
-
-type FriendWithActivity = UserProfile & {
-    recentGoals: string[];
-};
-
 export default function FriendView({ uid, currentUserName, isDarkMode = false }: Props) {
+    const isAnonymous = auth.currentUser?.isAnonymous;
+
+    // 名前がない場合に登録モードへ
+    const [isRegistering, setIsRegistering] = useState(currentUserName === "");
+    const [regName, setRegName] = useState("");
+    const [regGender, setRegGender] = useState<"male" | "female" | "">("");
+    const [regStep, setRegStep] = useState<"input" | "confirm">("input");
+
+    const [activeTab, setActiveTab] = useState<"search" | "following" | "followers">("following");
     const [searchTerm, setSearchTerm] = useState("");
     const [searchResults, setSearchResults] = useState<UserProfile[]>([]);
-    const [friends, setFriends] = useState<FriendWithActivity[]>([]);
-    const [requests, setRequests] = useState<FriendRequest[]>([]);
+    const [followingList, setFollowingList] = useState<UserProfile[]>([]);
+    const [followersList, setFollowersList] = useState<UserProfile[]>([]);
     const [loading, setLoading] = useState(false);
+    const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-    // フレンドリストと最近の成果の監視
+    // プロフィールが更新された際、まだ登録中で且つ名前が入ったなら登録モードを抜ける
     useEffect(() => {
-        if (!uid) return;
+        if (isRegistering && currentUserName !== "") {
+            setIsRegistering(false);
+        }
+    }, [currentUserName, isRegistering]);
 
-        const unsub = onSnapshot(collection(db, "users", uid, "friends"), async (snap) => {
-            const friendIds = snap.docs.map(d => d.id);
-            const profiles = await Promise.all(
-                friendIds.map(async (fId) => {
-                    try {
-                        const profile = await getUserProfile(fId);
-                        if (!profile) return null;
-
-                        // 成果の取得：インデックスエラーを避けるため、単純なクエリで取得してからJSでフィルタリング
-                        let recentGoals: string[] = [];
-                        try {
-                            const goalSnap = await getDocs(query(
-                                collection(db, "users", fId, "goals"),
-                                where("visibility", "in", ["friends", "public"]),
-                                limit(50)
-                            ));
-                            recentGoals = goalSnap.docs
-                                .map(d => ({ id: d.id, ...d.data() } as any))
-                                .filter(g => g.done === true)
-                                // achievedAt（達成日）の降順、なければcreatedAt（作成日）
-                                .sort((a, b) => {
-                                    const timeA = a.achievedAt?.toMillis?.() || a.createdAt?.toMillis?.() || 0;
-                                    const timeB = b.achievedAt?.toMillis?.() || b.createdAt?.toMillis?.() || 0;
-                                    return timeB - timeA;
-                                })
-                                .slice(0, 3)
-                                .map(g => g.title);
-                        } catch (e) {
-                            console.warn(`[FriendView] Could not fetch goals for ${fId}:`, e);
-                        }
-
-                        return { ...profile, recentGoals };
-                    } catch (e) {
-                        console.error(`[FriendView] Error loading profile ${fId}:`, e);
-                        return null;
-                    }
-                })
-            );
-            setFriends(profiles.filter((p): p is FriendWithActivity => p !== null));
-        });
-
-        return () => unsub();
-    }, [uid]);
-
-    // フレンド申請の監視
     useEffect(() => {
+        if (!uid || isAnonymous || isRegistering) return;
+        loadFollowing();
+        if (activeTab === "followers") loadFollowers();
+    }, [uid, activeTab, isAnonymous, isRegistering]);
+
+    const loadFollowing = async () => {
         if (!uid) return;
+        const list = await getFollowingUsers(uid);
+        setFollowingList(list);
+    };
 
-        const q = query(
-            collection(db, "users", uid, "friendRequests"),
-            orderBy("createdAt", "desc")
-        );
-
-        const unsub = onSnapshot(q, (snap) => {
-            const list = snap.docs.map(d => ({
-                fromUid: d.id,
-                ...d.data()
-            })) as FriendRequest[];
-            setRequests(list);
-        });
-
-        return () => unsub();
-    }, [uid]);
+    const loadFollowers = async () => {
+        if (!uid) return;
+        const list = await getFollowersUsers(uid);
+        setFollowersList(list);
+    };
 
     const handleSearch = async () => {
         if (!uid || !searchTerm.trim()) return;
@@ -117,224 +73,286 @@ export default function FriendView({ uid, currentUserName, isDarkMode = false }:
         }
     };
 
-    return (
-        <div style={{ padding: 12 }}>
-            <h2 style={{ fontSize: 20, marginBottom: 16, color: isDarkMode ? "#fff" : "#000" }}>🤝 フレンド</h2>
+    const handleFollow = async (targetUid: string) => {
+        if (!uid) return;
+        setActionLoading(targetUid);
+        try {
+            await followUser(uid, targetUid);
+            await loadFollowing();
+        } catch (e) {
+            alert("フォローに失敗しました");
+        } finally {
+            setActionLoading(null);
+        }
+    };
 
-            {/* 検索セクション */}
-            <div style={{ marginBottom: 24 }}>
-                <h3 style={{ fontSize: 16, marginBottom: 8, color: isDarkMode ? "#d1d5db" : "#000" }}>ユーザーを検索</h3>
-                <div style={{ display: "flex", gap: 8 }}>
-                    <input
-                        placeholder="名前や夢で検索..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        style={{
-                            flex: 1,
-                            padding: 10,
-                            borderRadius: 8,
-                            border: isDarkMode ? "1px solid #4b5563" : "1px solid #ccc",
-                            background: isDarkMode ? "#374151" : "#fff",
-                            color: isDarkMode ? "#fff" : "#000"
-                        }}
-                    />
-                    <button
-                        onClick={handleSearch}
-                        disabled={loading}
-                        style={{ padding: "8px 16px", borderRadius: 8, background: isDarkMode ? "#6366f1" : "#4f46e5", color: "#fff", border: "none", cursor: "pointer", fontWeight: "bold" }}
-                    >
-                        {loading ? "検索中..." : "検索"}
-                    </button>
-                </div>
+    const handleUnfollow = async (targetUid: string) => {
+        if (!uid) return;
+        if (!confirm("フォローを解除しますか？")) return;
+        setActionLoading(targetUid);
+        try {
+            await unfollowUser(uid, targetUid);
+            await loadFollowing();
+        } catch (e) {
+            alert("解除に失敗しました");
+        } finally {
+            setActionLoading(null);
+        }
+    };
 
-                {searchResults.length > 0 && (
-                    <ul style={{
-                        padding: 0,
-                        marginTop: 12,
-                        listStyle: "none",
-                        border: isDarkMode ? "1px solid #4b5563" : "1px solid #eee",
-                        borderRadius: 8,
-                        background: isDarkMode ? "#1f2937" : "#fff"
-                    }}>
-                        {searchResults.map(user => (
-                            <li key={user.uid} style={{
+    // 新規登録 or 名前再設定処理 (公開確認ステップ付)
+    const handleRegister = async (isPublic: boolean) => {
+        if (!uid || !regName.trim()) return;
+        try {
+            await saveUserProfile(uid, {
+                name: regName.trim(),
+                gender: regGender || "other",
+                isPublic: isPublic,
+            });
+            setIsRegistering(false);
+            alert("設定を保存しました！");
+        } catch (e) {
+            console.error(e);
+            alert("保存に失敗しました");
+        }
+    };
+
+    if (isAnonymous) return <div style={{ padding: 20, textAlign: "center", color: "#888" }}>Google連携が必要です</div>;
+
+    // 新規登録UI (名前・性別 -> 公開確認)
+    if (isRegistering) {
+        return (
+            <div style={{
+                padding: "24px 16px",
+                background: isDarkMode ? "#1f2937" : "#fff",
+                borderRadius: 12,
+                border: isDarkMode ? "1px solid #374151" : "1px solid #eee",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                textAlign: "center"
+            }}>
+                {regStep === "input" ? (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                        <h3 style={{ fontSize: 18, color: isDarkMode ? "#fff" : "#000", fontWeight: "bold" }}>👤 プロフィール登録</h3>
+                        <p style={{ fontSize: 13, color: isDarkMode ? "#d1d5db" : "#666" }}>フレンド機能を使うために、<br />名前と性別を入力してください。</p>
+                        <input
+                            placeholder="名前 (ニックネーム)"
+                            value={regName}
+                            onChange={(e) => setRegName(e.target.value)}
+                            style={{
                                 padding: 12,
-                                display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: "center",
-                                borderBottom: isDarkMode ? "1px solid #374151" : "1px solid #eee"
-                            }}>
-                                <div>
-                                    <div style={{ fontWeight: "bold", color: isDarkMode ? "#fff" : "#000" }}>{user.name}</div>
-                                    <div style={{ fontSize: 12, color: isDarkMode ? "#9ca3af" : "#666" }}>🌈 {user.dream || (user as any).dreams || "夢は秘密"}</div>
-                                </div>
-                                <button
-                                    onClick={async () => {
-                                        try {
-                                            await sendFriendRequest(uid!, user.uid, currentUserName);
-                                            alert(`${user.name}さんにフレンド申請を送りました`);
-                                            setSearchResults([]);
-                                            setSearchTerm("");
-                                        } catch (e) {
-                                            alert("申請に失敗しました。ルールを確認してください。");
-                                        }
-                                    }}
-                                    style={{
-                                        fontSize: 12,
-                                        padding: "6px 12px",
-                                        background: isDarkMode ? "#312e81" : "#eef2ff",
-                                        color: isDarkMode ? "#c7d2fe" : "#4f46e5",
-                                        border: isDarkMode ? "1px solid #4338ca" : "1px solid #4f46e5",
-                                        borderRadius: 6,
-                                        cursor: "pointer",
-                                        fontWeight: "bold"
-                                    }}
-                                >
-                                    申請を送る
-                                </button>
-                            </li>
-                        ))}
-                    </ul>
+                                borderRadius: 8,
+                                border: isDarkMode ? "1px solid #4b5563" : "1px solid #ccc",
+                                background: isDarkMode ? "#374151" : "#fff",
+                                color: isDarkMode ? "#fff" : "#000",
+                                fontSize: 16
+                            }}
+                        />
+                        <div style={{ display: "flex", gap: 8 }}>
+                            <button
+                                onClick={() => setRegGender("male")}
+                                style={{
+                                    flex: 1, padding: "10px", borderRadius: 8,
+                                    border: regGender === "male" ? "2px solid #3b82f6" : "1px solid #ccc",
+                                    background: regGender === "male" ? "#eff6ff" : "transparent",
+                                    color: regGender === "male" ? "#1d4ed8" : (isDarkMode ? "#fff" : "#000"),
+                                    fontWeight: "bold"
+                                }}
+                            >
+                                👨 男性
+                            </button>
+                            <button
+                                onClick={() => setRegGender("female")}
+                                style={{
+                                    flex: 1, padding: "10px", borderRadius: 8,
+                                    border: regGender === "female" ? "2px solid #f472b6" : "1px solid #ccc",
+                                    background: regGender === "female" ? "#fdf2f8" : "transparent",
+                                    color: regGender === "female" ? "#be185d" : (isDarkMode ? "#fff" : "#000"),
+                                    fontWeight: "bold"
+                                }}
+                            >
+                                👩 女性
+                            </button>
+                        </div>
+                        <button
+                            disabled={!regName.trim()}
+                            onClick={() => setRegStep("confirm")}
+                            style={{
+                                marginTop: 8,
+                                padding: "14px",
+                                background: !regName.trim() ? "#d1d5db" : "#4f46e5",
+                                color: "#fff",
+                                border: "none",
+                                borderRadius: 8,
+                                fontWeight: "bold",
+                                cursor: "pointer",
+                                fontSize: 16
+                            }}
+                        >
+                            次へ
+                        </button>
+                    </div>
+                ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                        <h3 style={{ fontSize: 18, color: isDarkMode ? "#fff" : "#000", fontWeight: "bold" }}>🌍 公開設定の確認</h3>
+                        <p style={{ fontSize: 14, color: isDarkMode ? "#d1d5db" : "#4b5563", lineHeight: 1.5 }}>
+                            プロフィールを<strong>公開</strong>して、<br />
+                            他のユーザーから検索できるようにしますか？
+                        </p>
+                        <div style={{ padding: 12, background: isDarkMode ? "#374151" : "#f9fafb", borderRadius: 8, fontSize: 12, color: "#888", textAlign: "left" }}>
+                            ※公開すると、他のユーザーがあなたを検索してフォローできるようになります。後からいつでも変更可能です。
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 10 }}>
+                            <button
+                                onClick={() => handleRegister(true)}
+                                style={{ padding: "14px", background: "#10b981", color: "#fff", border: "none", borderRadius: 8, fontWeight: "bold", cursor: "pointer", fontSize: 16 }}
+                            >
+                                公開して始める
+                            </button>
+                            <button
+                                onClick={() => handleRegister(false)}
+                                style={{ padding: "12px", background: "transparent", color: "#888", border: isDarkMode ? "1px solid #4b5563" : "1px solid #ccc", borderRadius: 8, cursor: "pointer" }}
+                            >
+                                非公開で始める
+                            </button>
+                        </div>
+                        <button onClick={() => setRegStep("input")} style={{ background: "none", border: "none", color: "#999", fontSize: 12, textDecoration: "underline", cursor: "pointer" }}>戻る</button>
+                    </div>
                 )}
             </div>
+        );
+    }
 
-            {/* 申請セクション */}
-            {requests.length > 0 && (
-                <div style={{
-                    marginBottom: 24,
-                    padding: 16,
-                    background: isDarkMode ? "#3f2b10" : "#fffbeb",
-                    borderRadius: 12,
-                    border: isDarkMode ? "1px solid #78350f" : "1px solid #fef3c7"
-                }}>
-                    <h3 style={{ fontSize: 16, marginBottom: 12, color: isDarkMode ? "#fbbf24" : "#92400e" }}>📩 届いている申請 ({requests.length})</h3>
-                    <ul style={{ padding: 0, listStyle: "none" }}>
-                        {requests.map(req => (
-                            <li key={req.fromUid} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                                <span style={{ fontWeight: "bold", color: isDarkMode ? "#fff" : "#000" }}>{req.fromName}</span>
-                                <div style={{ display: "flex", gap: 8 }}>
-                                    <button
-                                        onClick={async () => {
-                                            try {
-                                                await acceptFriendRequest(uid!, req.fromUid);
-                                            } catch (e) {
-                                                console.error(e);
-                                            }
-                                        }}
-                                        style={{ padding: "6px 16px", background: "#10b981", color: "#fff", border: "none", borderRadius: 6, cursor: "pointer", fontWeight: "bold" }}
-                                    >
-                                        承認
-                                    </button>
-                                    <button
-                                        onClick={async () => await rejectFriendRequest(uid!, req.fromUid)}
-                                        style={{ padding: "6px 16px", background: "#ef4444", color: "#fff", border: "none", borderRadius: 6, cursor: "pointer", fontWeight: "bold" }}
-                                    >
-                                        拒否
-                                    </button>
-                                </div>
-                            </li>
-                        ))}
-                    </ul>
+    // 基本ページタブ風スタイル
+    const tabStyle = (isActive: boolean): React.CSSProperties => ({
+        flex: 1,
+        padding: "10px 4px",
+        textAlign: "center",
+        cursor: "pointer",
+        borderRadius: 8,
+        fontWeight: "bold",
+        fontSize: 13,
+        transition: "all 0.2s",
+        background: isActive ? "#4f46e5" : (isDarkMode ? "transparent" : "#e5e7eb"),
+        color: isActive ? "#fff" : (isDarkMode ? "#fff" : "#374151"),
+        border: isActive ? "none" : (isDarkMode ? "1.5px solid #fff" : "none"),
+    });
+
+    const UserCard = ({ user }: { user: UserProfile }) => {
+        const isFollowing = followingList.some(u => u.uid === user.uid);
+        const isMe = user.uid === uid;
+
+        return (
+            <div style={{
+                padding: 14,
+                background: isDarkMode ? "#1f2937" : "#fff",
+                borderRadius: 12,
+                marginBottom: 10,
+                border: isDarkMode ? "1px solid #374151" : "1px solid #eee",
+            }}>
+                {user.recentAction && (
+                    <div style={{ marginBottom: 10, padding: 8, background: isDarkMode ? "rgba(16,185,129,0.1)" : "#ecfdf5", border: "1px solid rgba(16,185,129,0.2)", borderRadius: 8, fontSize: 12, color: "#10b981" }}>
+                        📢 {user.name}さんが{user.recentAction.type === "dream" ? "夢" : "目標"}「{user.recentAction.text}」を達成しました！
+                    </div>
+                )}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div style={{ flex: 1 }}>
+                        <div style={{ fontWeight: "bold", fontSize: 15, color: isDarkMode ? "#fff" : "#000", display: "flex", alignItems: "center", gap: 4 }}>
+                            <span style={{ color: user.gender === "female" ? "#f472b6" : user.gender === "male" ? "#3b82f6" : "#888" }}>
+                                {user.gender === "female" ? "👩" : user.gender === "male" ? "👨" : "👤"}
+                            </span>
+                            {user.name}
+                        </div>
+                        {user.showDream ? (
+                            <div style={{ fontSize: 12, color: "#6366f1", marginTop: 2 }}>🌈 {user.dream || "夢は秘密"}</div>
+                        ) : <div style={{ fontSize: 11, color: "#888", marginTop: 2 }}>🔒 非公開</div>}
+                    </div>
+                    {!isMe && (
+                        <button
+                            disabled={actionLoading === user.uid}
+                            onClick={() => isFollowing ? handleUnfollow(user.uid) : handleFollow(user.uid)}
+                            style={{
+                                fontSize: 11, padding: "5px 12px", borderRadius: 15, fontWeight: "bold", cursor: "pointer",
+                                border: isFollowing ? "1px solid #ccc" : "none",
+                                background: isFollowing ? "transparent" : "#4f46e5",
+                                color: isFollowing ? "#888" : "#fff",
+                                opacity: actionLoading === user.uid ? 0.7 : 1
+                            }}
+                        >
+                            {isFollowing ? "フォロー中" : "フォロー"}
+                        </button>
+                    )}
                 </div>
-            )}
+            </div>
+        );
+    };
 
-            {/* フレンドリスト */}
-            <div>
-                <h3 style={{ fontSize: 16, marginBottom: 12, color: isDarkMode ? "#d1d5db" : "#000" }}>フレンドリスト ({friends.length})</h3>
-                {friends.length === 0 ? (
-                    <p style={{ fontSize: 14, color: "#888", textAlign: "center", padding: 20 }}>まだフレンドはいません。</p>
-                ) : (
-                    <ul style={{ padding: 0, listStyle: "none" }}>
-                        {friends.map(friend => (
-                            <li key={friend.uid} style={{
-                                padding: 16,
-                                background: isDarkMode ? "#1f2937" : "#fff",
-                                borderRadius: 12,
-                                marginBottom: 12,
-                                border: isDarkMode ? "1px solid #374151" : "1px solid #eee"
-                            }}>
-                                <div style={{ fontWeight: "bold", fontSize: 16, color: isDarkMode ? "#fff" : "#000" }}>
-                                    <span style={{
-                                        color: friend.gender === "female" ? "#f472b6" : friend.gender === "male" ? "#3b82f6" : (isDarkMode ? "#9ca3af" : "#000"),
-                                        marginRight: 4,
-                                        fontSize: "1.1em"
-                                    }}>
-                                        {friend.gender === "female" ? "👩" : friend.gender === "male" ? "👨" : "👤"}
-                                    </span>
-                                    {friend.name}
-                                    {friend.dreamAchievedCount && friend.dreamAchievedCount > 0 ? (
-                                        <span style={{
-                                            marginLeft: 8,
-                                            fontSize: 11,
-                                            color: isDarkMode ? "#fbbf24" : "#d97706",
-                                            background: isDarkMode ? "#451a03" : "#fffbeb",
-                                            padding: "1px 6px",
-                                            borderRadius: 4,
-                                            border: isDarkMode ? "1px solid #92400e" : "1px solid #fcd34d"
-                                        }}>
-                                            🎖️ x{friend.dreamAchievedCount}
-                                        </span>
-                                    ) : null}
-                                </div>
-                                {(friend.dream || (friend as any).dreams) && (
-                                    <div style={{ fontSize: 14, color: isDarkMode ? "#818cf8" : "#6366f1", marginTop: 4, fontWeight: "500" }}>🌈 {friend.dream || (friend as any).dreams}</div>
-                                )}
+    return (
+        <div style={{ padding: "0 4px" }}>
+            <h2 style={{ fontSize: 18, marginBottom: 16, color: isDarkMode ? "#fff" : "#000", textAlign: "center" }}>🤝 フレンド</h2>
 
-                                {/* 最終ログインの表示 */}
-                                <div style={{ fontSize: 11, color: isDarkMode ? "#6b7280" : "#9ca3af", marginTop: 6 }}>
-                                    {(() => {
-                                        if (!friend.lastLoginAt) return "最終ログイン不明";
-                                        const last = friend.lastLoginAt.toDate ? friend.lastLoginAt.toDate() : new Date(friend.lastLoginAt);
-                                        const now = new Date();
-                                        const diffMs = now.getTime() - last.getTime();
-                                        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+            {/* 囲われたタブ選択エリア */}
+            <div style={{
+                display: "flex", gap: 6, padding: "8px",
+                background: isDarkMode ? "#1f2937" : "#fff",
+                borderRadius: 12, border: isDarkMode ? "1px solid #374151" : "1px solid #e5e7eb",
+                marginBottom: 16
+            }}>
+                <div onClick={() => setActiveTab("following")} style={tabStyle(activeTab === "following")}>フォロー中</div>
+                <div onClick={() => setActiveTab("followers")} style={tabStyle(activeTab === "followers")}>フォロワー</div>
+                <div onClick={() => setActiveTab("search")} style={tabStyle(activeTab === "search")}>検索</div>
+            </div>
 
-                                        if (diffDays === 0) return "今日ログイン";
-                                        if (diffDays === 1) return "昨日ログイン";
-                                        if (diffDays < 7) return `${diffDays}日前にログイン`;
-                                        return "1週間以上ログインなし";
-                                    })()}
-                                </div>
+            {/* 囲われたメインコンテンツエリア */}
+            <div style={{
+                padding: "16px 12px",
+                minHeight: 300,
+                background: isDarkMode ? "rgba(31,41,55,0.5)" : "rgba(255,255,255,0.5)",
+                borderRadius: 12,
+                border: isDarkMode ? "1px solid #374151" : "1px solid #e5e7eb"
+            }}>
+                {activeTab === "search" && (
+                    <>
+                        <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
+                            <input
+                                placeholder="名前や夢で検索..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                style={{
+                                    flex: 1, height: 32, padding: "0 10px", borderRadius: 6,
+                                    border: isDarkMode ? "1px solid #4b5563" : "1px solid #ccc",
+                                    background: isDarkMode ? "#374151" : "#fff",
+                                    color: isDarkMode ? "#fff" : "#000",
+                                    fontSize: 13
+                                }}
+                            />
+                            <button
+                                onClick={handleSearch}
+                                disabled={loading}
+                                style={{
+                                    height: 32, padding: "0 12px", borderRadius: 6,
+                                    background: "#4f46e5", color: "#fff", border: "none",
+                                    fontSize: 12, fontWeight: "bold", cursor: "pointer"
+                                }}
+                            >
+                                {loading ? "..." : "検索"}
+                            </button>
+                        </div>
+                        {searchResults.map(u => <UserCard key={u.uid} user={u} />)}
+                    </>
+                )}
 
-                                {friend.showGoal && (
-                                    <div style={{ marginTop: 16 }}>
-                                        <div style={{ fontSize: 11, color: isDarkMode ? "#9ca3af" : "#6b7280", fontWeight: "bold", marginBottom: 6 }}>✨ 最近の成果</div>
-                                        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                                            {friend.recentGoals.length > 0 ? (
-                                                friend.recentGoals.map((g, i) => (
-                                                    <div key={i} style={{
-                                                        fontSize: 13,
-                                                        color: isDarkMode ? "#6ee7b7" : "#059669",
-                                                        background: isDarkMode ? "#064e3b" : "#ecfdf5",
-                                                        padding: "6px 10px",
-                                                        borderRadius: 8,
-                                                        fontWeight: "500"
-                                                    }}>
-                                                        ✅ {g}
-                                                    </div>
-                                                ))
-                                            ) : (
-                                                <div style={{ fontSize: 12, color: "#9ca3af" }}>達成した目標はまだありません</div>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
+                {activeTab === "following" && (
+                    <>
+                        {followingList.map(u => <UserCard key={u.uid} user={u} />)}
+                        {followingList.length === 0 && <p style={{ textAlign: "center", color: "#888", fontSize: 13, marginTop: 40 }}>フォローしている人はいません</p>}
+                    </>
+                )}
 
-                                <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 12 }}>
-                                    <button
-                                        onClick={async () => {
-                                            if (window.confirm("フレンドを解除しますか？")) {
-                                                await removeFriend(uid!, friend.uid);
-                                            }
-                                        }}
-                                        style={{ fontSize: 11, color: isDarkMode ? "#f87171" : "#ef4444", background: "none", border: "none", cursor: "pointer", opacity: 0.8 }}
-                                    >
-                                        フレンド解除
-                                    </button>
-                                </div>
-                            </li>
-                        ))}
-                    </ul>
+                {activeTab === "followers" && (
+                    <>
+                        {followersList.map(u => <UserCard key={u.uid} user={u} />)}
+                        {followersList.length === 0 && <p style={{ textAlign: "center", color: "#888", fontSize: 13, marginTop: 40 }}>フォロワーはいません</p>}
+                    </>
                 )}
             </div>
         </div>

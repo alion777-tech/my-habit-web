@@ -53,6 +53,14 @@ export type UserProfile = {
   firstLoginAt?: any; // Timestamp
   totalPoints?: number;
 
+  following?: string[]; // フォロー中のユーザーUID
+  showLastLogin?: boolean;
+  recentAction?: {
+    type: "dream" | "goal";
+    text: string;
+    date: any; // Timestamp
+  } | null;
+
   // 統計・称号用
   stats?: {
     loginDays?: number;
