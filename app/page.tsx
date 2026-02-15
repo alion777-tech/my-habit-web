@@ -854,32 +854,36 @@ export default function Home() {
             { id: "habit", label: "習慣", icon: "🔥" },
             { id: "dream", label: "夢・目標", icon: "🌈" },
             { id: "todo", label: "ToDo", icon: "📝" },
-            // Unlock condition: 10 goals achieved
-            // goals配列から直接判定 (statsの同期ズレを防ぐため)
-          ].concat(
-            goals.filter(g => g.done).length >= 50
-              ? [{ id: "bucketList", label: "100リスト", icon: "💯" }]
-              : []
-          ).map((btn) => (
-            <button
-              key={btn.id}
-              onClick={() => setView(btn.id as any)}
-              style={{
-                flex: 1,
-                padding: "10px 4px",
-                background: view === btn.id ? "#4f46e5" : (isDarkMode ? "transparent" : "#e5e7eb"),
-                color: view === btn.id ? "#fff" : (isDarkMode ? "#fff" : "#374151"),
-                border: view === btn.id ? "none" : (isDarkMode ? "1.5px solid #fff" : "none"),
-                borderRadius: 8,
-                fontWeight: "bold",
-                fontSize: 13,
-                cursor: "pointer",
-                transition: "all 0.2s"
-              }}
-            >
-              {btn.label}
-            </button>
-          ))}
+            { id: "bucketList", label: "100リスト", icon: "💯" },
+          ].map((btn) => {
+            const isLocked = btn.id === "bucketList" && goals.filter(g => g.done).length < 50;
+            return (
+              <button
+                key={btn.id}
+                onClick={() => !isLocked && setView(btn.id as any)}
+                style={{
+                  flex: 1,
+                  padding: "10px 4px",
+                  background: isLocked
+                    ? (isDarkMode ? "#374151" : "#d1d5db")
+                    : (view === btn.id ? "#4f46e5" : (isDarkMode ? "transparent" : "#e5e7eb")),
+                  color: isLocked
+                    ? (isDarkMode ? "#9ca3af" : "#6b7280")
+                    : (view === btn.id ? "#fff" : (isDarkMode ? "#fff" : "#374151")),
+                  border: view === btn.id ? "none" : (isDarkMode ? "1.5px solid #fff" : "none"),
+                  borderRadius: 8,
+                  fontWeight: "bold",
+                  fontSize: 13,
+                  cursor: isLocked ? "not-allowed" : "pointer",
+                  transition: "all 0.2s",
+                  opacity: isLocked ? 0.6 : 1,
+                }}
+                disabled={isLocked}
+              >
+                {btn.label}
+              </button>
+            );
+          })}
         </div>
 
         <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
@@ -907,6 +911,23 @@ export default function Home() {
               {btn.label}
             </button>
           ))}
+          <button
+            onClick={() => window.open("https://note.com/alion777/n/nba6274e5055b", "_blank")}
+            style={{
+              flex: 1,
+              padding: "10px 4px",
+              background: isDarkMode ? "transparent" : "#e5e7eb",
+              color: isDarkMode ? "#fff" : "#374151",
+              border: isDarkMode ? "1.5px solid #fff" : "none",
+              borderRadius: 8,
+              fontWeight: "bold",
+              fontSize: 13,
+              cursor: "pointer",
+              transition: "all 0.2s"
+            }}
+          >
+            📖 使い方
+          </button>
         </div>
 
         <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
