@@ -4,6 +4,21 @@ import React, { useEffect, useState, useRef } from "react";
 import type { BucketListData, BucketListItem } from "@/types/appTypes";
 import { getBucketList, saveBucketList } from "@/lib/bucketListActions";
 
+const UI = {
+    fontBase: 14,
+    fontSmall: 12,
+    fontTiny: 11,
+
+    radius: 8,
+    radiusSm: 6,
+    radiusLg: 12,
+
+    padXs: "4px 8px",
+    padSm: "8px 12px",
+    padMd: 12,     // 入力・カードの基本paddingに使う
+};
+
+
 type Props = {
     uid: string | null;
     isDarkMode?: boolean;
@@ -126,7 +141,7 @@ export default function BucketListView({ uid, isDarkMode = false }: Props) {
                         onKeyDown={(e) => { if (e.key === "Enter") setEditingSubtitle(false); }}
                         autoFocus
                         style={{
-                            fontSize: 14,
+                            fontSize: UI.fontBase,
                             color: isDarkMode ? "#9ca3af" : "#6b7280",
                             textAlign: "center",
                             background: "transparent",
@@ -139,9 +154,9 @@ export default function BucketListView({ uid, isDarkMode = false }: Props) {
                 ) : (
                     <div
                         onClick={() => setEditingSubtitle(true)}
-                        style={{ fontSize: 14, color: isDarkMode ? "#9ca3af" : "#6b7280", cursor: "pointer", minHeight: 20, display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}
+                        style={{ fontSize: UI.fontBase, color: isDarkMode ? "#9ca3af" : "#6b7280", cursor: "pointer", minHeight: 20, display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}
                     >
-                        {data.subtitle} <span style={{ fontSize: 12, opacity: 0.7 }}>✏️</span>
+                        {data.subtitle} <span style={{ fontSize: UI.fontSmall, opacity: 0.7 }}>✏️</span>
                     </div>
                 )}
 
@@ -157,7 +172,16 @@ export default function BucketListView({ uid, isDarkMode = false }: Props) {
                     return editingTitle ? (
                         <div style={{ marginBottom: 16 }}>
                             {/* Row 1: Center Aligned [Prefix][suffixPart1] */}
-                            <div style={{ display: "flex", justifyContent: "center", alignItems: "baseline", gap: 2 }}>
+                            <div
+                                style={{
+                                    display: "flex",
+                                    justifyContent: "center",
+                                    alignItems: "baseline",
+                                    gap: 2,
+                                    transform: "translateX(10px)", // ←ここ追加
+                                }}
+                            >
+
                                 <input
                                     value={prefix}
                                     onChange={(e) => updateData({ title: e.target.value + fullSuffix })}
@@ -198,10 +222,19 @@ export default function BucketListView({ uid, isDarkMode = false }: Props) {
                             }}
                         >
                             {/* Row 1: Center Aligned */}
-                            <div style={{ display: "flex", justifyContent: "center", alignItems: "baseline", gap: 4 }}>
+                            <div
+                                style={{
+                                    display: "flex",
+                                    justifyContent: "center",
+                                    alignItems: "baseline",
+                                    gap: 4,
+                                    transform: "translateX(10px)", // ←ここだけ調整（8〜16pxくらいで好み）
+                                }}
+                            >
                                 <span style={{ fontSize: 24, fontWeight: "bold" }}>{prefix}</span>
                                 <span style={{ fontSize: 24, fontWeight: "bold" }}>{suffixPart1}</span>
                             </div>
+
 
                             {/* Row 2: Right Aligned */}
                             <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 4 }}>
@@ -222,13 +255,14 @@ export default function BucketListView({ uid, isDarkMode = false }: Props) {
                         value={data.targetDate || ""}
                         onChange={(e) => updateData({ targetDate: e.target.value })}
                         style={{
-                            padding: "4px 8px",
-                            borderRadius: 6,
+                            padding: UI.padXs,
+                            borderRadius: UI.radiusSm,
                             border: isDarkMode ? "1px solid #4b5563" : "1px solid #ccc",
                             background: isDarkMode ? "#1f2937" : "#fff",
                             color: isDarkMode ? "#fff" : "#000",
                             cursor: "pointer"
                         }}
+
                     />
                 </div>
 
@@ -299,11 +333,11 @@ export default function BucketListView({ uid, isDarkMode = false }: Props) {
                                 display: "flex",
                                 alignItems: "center",
                                 gap: 8,
-                                padding: "8px 12px",
+                                padding: UI.padSm,
                                 background: item.isCompleted
                                     ? (isDarkMode ? "#1f2937" : "#f9fafb")
                                     : (isDarkMode ? "#374151" : "#fff"),
-                                borderRadius: 8,
+                                borderRadius: UI.radius,
                                 border: isDarkMode ? "1px solid #4b5563" : "1px solid #e5e7eb",
                                 opacity: item.isCompleted ? 0.6 : 1,
                                 transition: "all 0.2s"
@@ -341,7 +375,7 @@ export default function BucketListView({ uid, isDarkMode = false }: Props) {
                                         placeholder="したいことを入力..."
                                         style={{
                                             width: "100%",
-                                            padding: "4px 8px",
+                                            padding: UI.padXs,
                                             borderRadius: 4,
                                             border: "1px solid #6366f1",
                                             background: isDarkMode ? "#1f2937" : "#fff",
@@ -356,7 +390,7 @@ export default function BucketListView({ uid, isDarkMode = false }: Props) {
                                             setEditingItemText(item.text);
                                         }}
                                         style={{
-                                            padding: "4px 8px",
+                                            padding: UI.padXs,
                                             cursor: "text",
                                             minHeight: 24,
                                             color: isOverdue

@@ -882,7 +882,7 @@ export default function Home() {
                 { id: "todo", label: "ToDo", icon: "📝" },
                 { id: "bucketList", label: "100リスト", icon: "💯" },
               ].map((btn) => {
-                const isLocked = btn.id === "bucketList" && goals.filter(g => g.done).length < 50;
+                const isLocked = btn.id === "bucketList" && goals.filter(g => g.done).length < 10;
                 return (
                   <button
                     key={btn.id}
