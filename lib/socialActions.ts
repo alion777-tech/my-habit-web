@@ -26,7 +26,7 @@ export const searchUsers = async (searchTerm: string, currentUid: string): Promi
         const q = query(
             collection(db, "publicUsers"),
             where("isPublic", "==", true),
-            limit(50)
+            limit(200)
         );
 
         const snap = await getDocs(q);
@@ -166,47 +166,7 @@ export const getFollowingUsers = async (currentUid: string): Promise<UserProfile
 };
 
 
-/**
- * フォロワー一覧を取得
- * 全 publicUsers から where("following", "array-contains", currentUid) で検索
- */
-export const getFollowersUsers = async (currentUid: string): Promise<UserProfile[]> => {
-    if (!currentUid) return [];
 
-    try {
-        const q = query(
-            collection(db, "publicUsers"),
-            where("following", "array-contains", currentUid),
-            limit(100) // 一旦100件制限
-        );
-
-        const snap = await getDocs(q);
-        const results: UserProfile[] = [];
-
-        snap.forEach(d => {
-            const u = d.data();
-            results.push({
-                uid: d.id,
-                name: u.name ?? "",
-                gender: u.gender ?? "",
-                dream: u.dream ?? u.dreams ?? "",
-                isPublic: !!u.isPublic,
-                showDream: !!u.showDream || !!u.showDreams,
-                showGoal: !!u.showGoal || !!u.showGoals,
-                showLastLogin: !!u.showLastLogin,
-                following: u.following ?? [],
-                earnedTitles: u.earnedTitles ?? [],
-                lastLoginAt: u.lastLoginAt ?? null,
-                recentAction: u.recentAction ?? null,
-            });
-        });
-
-        return results;
-    } catch (e) {
-        console.error("[getFollowersUsers] error:", e);
-        return [];
-    }
-};
 
 /**
  * 最近の活動を更新

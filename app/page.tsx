@@ -100,27 +100,40 @@ export default function Home() {
 
 
 
+  // 🔄 全情報のクリア (ログアウト時などに使用)
+  const resetAllData = () => {
+    setProfile({
+      uid: "",
+      name: "",
+      gender: "",
+      dream: "",
+      isPublic: false,
+      showDream: false,
+      showGoal: false,
+      earnedTitles: [],
+      dreamAchievedCount: 0,
+    });
+    setHabits([]);
+    setGoals([]);
+    setTodos([]);
+    setEarnedTitles([]);
+    setDreamInput("");
+    setGoalInput("");
+    setTodoInput("");
+    setIsLoading(false);
+  };
+
   // 👤 プロフィールのリアルタイム監視
   useEffect(() => {
     if (!uid) {
-      setProfile({
-        uid: "",
-        name: "",
-        gender: "",
-        dream: "",
-        isPublic: false,
-        showDream: false,
-        showGoal: false,
-        earnedTitles: [],
-        dreamAchievedCount: 0,
-      });
-      setIsLoading(false);
+      resetAllData();
       return;
     }
 
     console.log("[ProfileSync] starting snapshot for:", uid);
-    // すでにプロフィールがある場合は loading を true にしない（ちらつき防止）
-    if (!profile.uid) setIsLoading(true);
+    // 新しいユーザーへ切り替わる際、以前のデータをクリアしておく（混ざるのを防ぐ）
+    resetAllData();
+    setIsLoading(true);
 
     const unsub = onSnapshot(doc(db, "users", uid), async (snap) => {
       try {
@@ -513,10 +526,18 @@ export default function Home() {
 
   const handleSaveProfile = async () => {
     if (!uid) return;
+    if (!profile.name.trim()) {
+      alert("名前を入力してください");
+      return;
+    }
+    if (!profile.gender || (profile.gender !== "male" && profile.gender !== "female")) {
+      alert("性別を選択してください");
+      return;
+    }
     try {
       const updateData = {
-        name: profile.name,
-        gender: profile.gender || "",
+        name: profile.name.trim(),
+        gender: profile.gender || "other",
         isPublic: !!profile.isPublic,
         showDream: !!profile.showDream,
         showGoal: !!profile.showGoal,

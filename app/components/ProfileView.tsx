@@ -22,7 +22,7 @@ export default function ProfileView({ uid, profile, setProfile, onSave, isDarkMo
       <h2 style={{ fontSize: 20, marginBottom: 20, color: isDarkMode ? "#fff" : "#000" }}>👤 プロフィール設定</h2>
 
       <div style={{ marginBottom: 16 }}>
-        <label style={{ display: "block", fontSize: 13, marginBottom: 6, color: isDarkMode ? "#d1d5db" : "#4b5563" }}>名前</label>
+        <label style={{ display: "block", fontSize: 13, marginBottom: 6, color: isDarkMode ? "#d1d5db" : "#4b5563" }}>名前 <span style={{ color: "#ef4444" }}>* 必須</span></label>
         <input
           placeholder="名前"
           value={profile.name}

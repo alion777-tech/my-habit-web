@@ -96,11 +96,19 @@ export const updateLastLogin = async (uid: string) => {
 
   try {
     const statusRef = doc(db, "users", uid, "public", "status");
+    const now = serverTimestamp();
     await setDoc(statusRef, {
-      lastLoginAt: serverTimestamp(),
-      lastActive: serverTimestamp()
+      lastLoginAt: now,
+      lastActive: now
     }, { merge: true });
-    console.log(`[updateLastLogin] Updated status at: ${statusRef.path}`);
+
+    // 公開プロフィール側にも同期して、フォローしている人から見えるようにする
+    const publicRef = doc(db, "publicUsers", uid);
+    await setDoc(publicRef, {
+      lastLoginAt: now
+    }, { merge: true });
+
+    console.log(`[updateLastLogin] Updated status and public profile for: ${uid}`);
   } catch (e) {
     console.error(`[updateLastLogin] Error:`, e);
   }
