@@ -701,7 +701,7 @@ export default function Home() {
 
   // 📅 ログイン日数の更新
   useEffect(() => {
-    if (!uid || profile.isLoading) return; // profile.name チェックを緩める
+    if (!uid || isLoading) return; // profile.name チェックを緩める
     const today = new Date().toISOString().split("T")[0];
     const s = profile.stats || {};
 
@@ -723,7 +723,7 @@ export default function Home() {
       saveUserProfile(uid, { stats: newStats, firstLoginAt });
       handleAwardTitles();
     }
-  }, [uid, (profile.stats?.loginDays || 0), yesterdayStr, isLoading]);
+  }, [uid, yesterdayStr, isLoading]);
 
   const visibleHabits = habits
     .filter(h => {
@@ -897,7 +897,7 @@ export default function Home() {
                 { id: "todo", label: "ToDo", icon: "📝" },
                 { id: "bucketList", label: "100リスト", icon: "💯" },
               ].map((btn) => {
-                const isLocked = btn.id === "bucketList" && goals.filter(g => g.done).length < 30;
+                const isLocked = btn.id === "bucketList" && goals.filter(g => g.done).length < 10;
                 return (
                   <button
                     key={btn.id}
