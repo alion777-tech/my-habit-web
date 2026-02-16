@@ -260,127 +260,132 @@ export default function DreamView({
 
       {/* 目標一覧 */}
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        {goals.map((g) => (
-          <div
-            key={g.id}
-            style={{
-              padding: 12,
-              borderRadius: 10,
-              background: g.done
-                ? (isDarkMode ? "#1f2937" : "#f9fafb")
-                : (isDarkMode ? "#374151" : "#ffffff"),
-              border: g.done
-                ? (isDarkMode ? "1px solid #111827" : "1px solid #e5e7eb")
-                : (isDarkMode ? "1px solid #4b5563" : "1px solid #ddd"),
-              display: "flex",
-              alignItems: "center",
-              gap: 12,
-              opacity: g.done ? 0.7 : 1,
-            }}
-          >
-            <input
-              type="checkbox"
-              checked={g.done}
-              onChange={async () => {
-                if (!uid) return;
-                const newDoneState = !g.done;
-
-                // 1. ゴール状態更新
-                await updateGoalAction(uid, g.id, { done: newDoneState });
-
-                // 2. 統計更新 (達成数カウント)
-                const currentStats = profile.stats || {};
-                const currentCount = currentStats.goalsAchievedCount || 0;
-
-                // チェックON = 達成数+1, OFF = 達成数-1
-                const newCount = newDoneState
-                  ? currentCount + 1
-                  : Math.max(0, currentCount - 1);
-
-                const newStats = {
-                  ...currentStats,
-                  goalsAchievedCount: newCount
-                };
-
-                // プロフィール更新 (State + Firestore)
-                setProfile(prev => ({ ...prev, stats: newStats }));
-                await saveUserProfile(uid, { stats: newStats });
-
-                // 通知・演出
-                if (newDoneState) {
-                  alert(`🎉 目標達成おめでとうございます！\nボーナスポイント +100pt 獲得しました！`);
-
-                  // 10個達成での機能解禁通知
-                  if (newCount === 30) {
-                    setTimeout(() => {
-                      alert(`🚀 新機能が解禁されました！\n\n「💯 100 LIST (死ぬまでにしたい100のこと)」\n\nがメニューに追加されました。ぜひチェックしてみてください！`);
-                    }, 500);
-                  }
-
-                  const { updateRecentAction } = await import("@/lib/socialActions");
-                  await updateRecentAction(uid, g.title, "goal");
-                }
+        {[...goals]
+          .sort((a, b) => {
+            if (a.done === b.done) return 0;
+            return a.done ? 1 : -1;
+          })
+          .map((g) => (
+            <div
+              key={g.id}
+              style={{
+                padding: 12,
+                borderRadius: 10,
+                background: g.done
+                  ? (isDarkMode ? "#1f2937" : "#f9fafb")
+                  : (isDarkMode ? "#374151" : "#ffffff"),
+                border: g.done
+                  ? (isDarkMode ? "1px solid #111827" : "1px solid #e5e7eb")
+                  : (isDarkMode ? "1px solid #4b5563" : "1px solid #ddd"),
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                opacity: g.done ? 0.7 : 1,
               }}
-              style={{ width: 18, height: 18, cursor: "pointer" }}
-            />
-
-            <div style={{ flex: 1 }}>
-              {editingGoalId === g.id ? (
-                <input
-                  value={editingGoalText}
-                  onChange={(e) => setEditingGoalText(e.target.value)}
-                  onBlur={async () => {
-                    if (!uid || !editingGoalText.trim()) {
-                      setEditingGoalId(null);
-                      return;
-                    }
-                    await updateGoalAction(uid, g.id, { title: editingGoalText.trim() });
-                    setEditingGoalId(null);
-                  }}
-                  autoFocus
-                  style={{
-                    width: "100%",
-                    padding: 4,
-                    background: isDarkMode ? "#111827" : "#fff",
-                    color: isDarkMode ? "#fff" : "#000",
-                    border: "1px solid #6366f1"
-                  }}
-                />
-              ) : (
-                <div
-                  onDoubleClick={() => {
-                    setEditingGoalId(g.id);
-                    setEditingGoalText(g.title);
-                  }}
-                  style={{
-                    textDecoration: g.done ? "line-through" : "none",
-                    fontWeight: g.done ? "normal" : "600",
-                    color: g.done
-                      ? (isDarkMode ? "#9ca3af" : "#9ca3af")
-                      : (isDarkMode ? "#f3f4f6" : "#1f2937")
-                  }}
-                >
-                  {g.title}
-                </div>
-              )}
-              {g.deadline && (
-                <div style={{ fontSize: 11, color: g.done ? (isDarkMode ? "#4b5563" : "#d1d5db") : (isDarkMode ? "#9ca3af" : "#6b7280"), marginTop: 2 }}>
-                  📅 期限: {g.deadline}
-                </div>
-              )}
-            </div>
-
-            <button
-              onClick={async () => {
-                if (!uid || !window.confirm("この目標を削除しますか？")) return;
-                await deleteGoalAction(uid, g.id);
-              }}
-              style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: isDarkMode ? "#9ca3af" : "#888" }}
             >
-              🗑
-            </button>
-          </div>
-        ))}
+              <input
+                type="checkbox"
+                checked={g.done}
+                onChange={async () => {
+                  if (!uid) return;
+                  const newDoneState = !g.done;
+
+                  // 1. ゴール状態更新
+                  await updateGoalAction(uid, g.id, { done: newDoneState });
+
+                  // 2. 統計更新 (達成数カウント)
+                  const currentStats = profile.stats || {};
+                  const currentCount = currentStats.goalsAchievedCount || 0;
+
+                  // チェックON = 達成数+1, OFF = 達成数-1
+                  const newCount = newDoneState
+                    ? currentCount + 1
+                    : Math.max(0, currentCount - 1);
+
+                  const newStats = {
+                    ...currentStats,
+                    goalsAchievedCount: newCount
+                  };
+
+                  // プロフィール更新 (State + Firestore)
+                  setProfile(prev => ({ ...prev, stats: newStats }));
+                  await saveUserProfile(uid, { stats: newStats });
+
+                  // 通知・演出
+                  if (newDoneState) {
+                    alert(`🎉 目標達成おめでとうございます！\nボーナスポイント +100pt 獲得しました！`);
+
+                    // 10個達成での機能解禁通知
+                    if (newCount === 30) {
+                      setTimeout(() => {
+                        alert(`🚀 新機能が解禁されました！\n\n「💯 100 LIST (死ぬまでにしたい100のこと)」\n\nがメニューに追加されました。ぜひチェックしてみてください！`);
+                      }, 500);
+                    }
+
+                    const { updateRecentAction } = await import("@/lib/socialActions");
+                    await updateRecentAction(uid, g.title, "goal");
+                  }
+                }}
+                style={{ width: 18, height: 18, cursor: "pointer" }}
+              />
+
+              <div style={{ flex: 1 }}>
+                {editingGoalId === g.id ? (
+                  <input
+                    value={editingGoalText}
+                    onChange={(e) => setEditingGoalText(e.target.value)}
+                    onBlur={async () => {
+                      if (!uid || !editingGoalText.trim()) {
+                        setEditingGoalId(null);
+                        return;
+                      }
+                      await updateGoalAction(uid, g.id, { title: editingGoalText.trim() });
+                      setEditingGoalId(null);
+                    }}
+                    autoFocus
+                    style={{
+                      width: "100%",
+                      padding: 4,
+                      background: isDarkMode ? "#111827" : "#fff",
+                      color: isDarkMode ? "#fff" : "#000",
+                      border: "1px solid #6366f1"
+                    }}
+                  />
+                ) : (
+                  <div
+                    onDoubleClick={() => {
+                      setEditingGoalId(g.id);
+                      setEditingGoalText(g.title);
+                    }}
+                    style={{
+                      textDecoration: g.done ? "line-through" : "none",
+                      fontWeight: g.done ? "normal" : "600",
+                      color: g.done
+                        ? (isDarkMode ? "#9ca3af" : "#9ca3af")
+                        : (isDarkMode ? "#f3f4f6" : "#1f2937")
+                    }}
+                  >
+                    {g.title}
+                  </div>
+                )}
+                {g.deadline && (
+                  <div style={{ fontSize: 11, color: g.done ? (isDarkMode ? "#4b5563" : "#d1d5db") : (isDarkMode ? "#9ca3af" : "#6b7280"), marginTop: 2 }}>
+                    📅 期限: {g.deadline}
+                  </div>
+                )}
+              </div>
+
+              <button
+                onClick={async () => {
+                  if (!uid || !window.confirm("この目標を削除しますか？")) return;
+                  await deleteGoalAction(uid, g.id);
+                }}
+                style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: isDarkMode ? "#9ca3af" : "#888" }}
+              >
+                🗑
+              </button>
+            </div>
+          ))}
         {goals.length === 0 && (
           <p style={{ textAlign: "center", color: isDarkMode ? "#6b7280" : "#9ca3af", fontSize: 14, marginTop: 12 }}>
             まだ目標がありません。小さな一歩から始めましょう！

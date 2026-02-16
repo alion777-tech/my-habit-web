@@ -556,7 +556,7 @@ export default function Home() {
 
   // 🏅 称号獲得処理
   const handleAwardTitles = async () => {
-    if (!uid || isLoading || !profile.name) return;
+    if (!uid || isLoading) return;
     const s = profile.stats || {};
     const newTitles: string[] = [...earnedTitles];
     let totalTitleBonus = 0;
@@ -571,9 +571,17 @@ export default function Home() {
     let earnedAny = false;
     let newBonusAdded = 0;
 
+    // 統計の自動補正 (habitsCreatedCount / goalsCreatedCount)
+    // 実際のドキュメント数と stats がズレている場合があるため、称号判定用に補正したものを使う
+    const correctedStats = {
+      ...s,
+      totalPoints: totalPoint,
+      habitsCreatedCount: Math.max(s.habitsCreatedCount || 0, habits.length),
+      goalsCreatedCount: Math.max(s.goalsCreatedCount || 0, goals.length),
+    };
+
     TITLE_DEFINITIONS.forEach(t => {
-      // stats と totalPoint の両方を使用してチェック
-      if (!newTitles.includes(t.id) && t.check({ ...s, totalPoints: totalPoint })) {
+      if (!newTitles.includes(t.id) && t.check(correctedStats)) {
         newTitles.push(t.id);
         totalTitleBonus += t.bonusPoints;
         newBonusAdded += t.bonusPoints;
@@ -583,7 +591,7 @@ export default function Home() {
     });
 
     // 称号ボーナスが現在のDB値と異なる、または新しい称号がある場合に更新
-    if (earnedAny || totalTitleBonus !== profile.bonusPoints) {
+    if (earnedAny || (totalTitleBonus !== profile.bonusPoints && !isLoading)) {
       if (earnedAny) playCharing();
 
       setEarnedTitles(newTitles);
@@ -604,7 +612,7 @@ export default function Home() {
   // ポイントや統計が変動した際に自動で称号チェック
   useEffect(() => {
     handleAwardTitles();
-  }, [totalPoint, profile.stats]);
+  }, [totalPoint, profile.stats, habits.length, goals.length, earnedTitles.length]);
 
   // 🔹 利用制限チェック用
   const checkLimit = (type: "goals" | "todos" | "habits") => {
@@ -693,7 +701,7 @@ export default function Home() {
 
   // 📅 ログイン日数の更新
   useEffect(() => {
-    if (!uid || !profile.name) return;
+    if (!uid || profile.isLoading) return; // profile.name チェックを緩める
     const today = new Date().toISOString().split("T")[0];
     const s = profile.stats || {};
 
@@ -717,11 +725,18 @@ export default function Home() {
     }
   }, [uid, (profile.stats?.loginDays || 0), yesterdayStr, isLoading]);
 
-  const visibleHabits = habits.filter(h => {
-    if (h.type === "daily") return true;
-    if (h.type === "weekly" && h.daysOfWeek?.includes(todayDow)) return true;
-    return false;
-  });
+  const visibleHabits = habits
+    .filter(h => {
+      if (h.type === "daily") return true;
+      if (h.type === "weekly" && h.daysOfWeek?.includes(todayDow)) return true;
+      return false;
+    })
+    .sort((a, b) => {
+      const aDone = (a.pointHistory ?? []).some(p => p.date === todayStr);
+      const bDone = (b.pointHistory ?? []).some(p => p.date === todayStr);
+      if (aDone === bDone) return 0;
+      return aDone ? 1 : -1; // 未達成(false)を前に、達成済み(true)を後に
+    });
 
 
 
