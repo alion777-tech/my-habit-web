@@ -132,7 +132,7 @@ export default function Home() {
 
     console.log("[ProfileSync] starting snapshot for:", uid);
     // 新しいユーザーへ切り替わる際、以前のデータをクリアしておく（混ざるのを防ぐ）
-    resetAllData();
+
     setIsLoading(true);
 
     const unsub = onSnapshot(doc(db, "users", uid), async (snap) => {
