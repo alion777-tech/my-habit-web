@@ -953,7 +953,7 @@ export default function Home() {
                 </button>
               ))}
               <button
-                onClick={() => window.open("https://note.com/alion777/n/nba6274e5055b", "_blank")}
+                onClick={() => window.open("https://zinseigame.blogspot.com/2026/02/10-check-httpsdream-lan.html")}
                 style={{
                   flex: 1,
                   padding: "10px 4px",
