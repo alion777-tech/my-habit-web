@@ -591,7 +591,11 @@ export default function Home() {
     });
 
     // 称号ボーナスが現在のDB値と異なる、または新しい称号がある場合に更新
-    if (earnedAny || (totalTitleBonus !== profile.bonusPoints && !isLoading)) {
+    const sameTitles =
+      JSON.stringify(newTitles.sort()) ===
+      JSON.stringify((profile.earnedTitles || []).sort());
+
+    if (!sameTitles) {
       if (earnedAny) playCharing();
 
       setEarnedTitles(newTitles);
