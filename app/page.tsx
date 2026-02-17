@@ -613,10 +613,6 @@ export default function Home() {
     }
   };
 
-  // ポイントや統計が変動した際に自動で称号チェック
-  useEffect(() => {
-    handleAwardTitles();
-  }, [totalPoint, profile.stats, habits.length, goals.length, earnedTitles.length]);
 
   // 🔹 利用制限チェック用
   const checkLimit = (type: "goals" | "todos" | "habits") => {
