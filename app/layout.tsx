@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "目標達成習慣",
+  title: "Dream-Habit",
   description: "最強の習慣化・目標達成アプリ",
   manifest: "/manifest.json",
   themeColor: "#4f46e5",
