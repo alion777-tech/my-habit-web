@@ -1,3 +1,5 @@
+
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -209,7 +211,35 @@ export default function AuthBox({ isDarkMode = false }: Props) {
           ゲストとして利用を開始
         </button>
       </div>
-
+<p
+  style={{
+    fontSize: 11,
+    marginTop: 14,
+    textAlign: "center",
+    lineHeight: 1.5,
+    color: isDarkMode ? "#9ca3af" : "#6b7280"
+  }}
+>
+  ログインまたは利用開始することで
+  <a
+    href="/terms.html"
+    target="_blank"
+    rel="noopener noreferrer"
+    style={{ color: "#6366f1", margin: "0 4px" }}
+  >
+    利用規約
+  </a>
+  および
+  <a
+    href="/privacy.html"
+    target="_blank"
+    rel="noopener noreferrer"
+    style={{ color: "#6366f1", margin: "0 4px" }}
+  >
+    プライバシーポリシー
+  </a>
+  に同意したものとみなします。
+</p>
       {error && <div style={{ color: "#ef4444", fontSize: 12, marginTop: 12, textAlign: "center" }}>{error}</div>}
     </div>
   );
