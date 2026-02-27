@@ -774,10 +774,10 @@ export default function Home() {
         boxShadow: isDarkMode ? "0 8px 24px rgba(0,0,0,0.5)" : "0 8px 24px rgba(0,0,0,0.1)",
         transition: "background 0.3s"
       }}>
+        <AuthBox isDarkMode={isDarkMode} />
         <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
           <LanguageSwitcher isDarkMode={isDarkMode} />
         </div>
-        <AuthBox isDarkMode={isDarkMode} />
 
         {uid === null && !isLoading && (
           <div style={{ textAlign: "center", marginTop: 20 }}>

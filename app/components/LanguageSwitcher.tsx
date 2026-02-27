@@ -17,32 +17,33 @@ export default function LanguageSwitcher({ isDarkMode = false }: { isDarkMode?: 
         <button
             onClick={toggleLanguage}
             style={{
-                padding: "8px 16px",
-                borderRadius: "24px",
-                border: isDarkMode ? "3px solid #6366f1" : "3px solid #4f46e5",
-                background: isDarkMode ? "#1f2937" : "#ffffff",
-                color: isDarkMode ? "#ffffff" : "#4f46e5",
-                fontSize: "14px",
-                fontWeight: "bold",
-                cursor: "pointer",
                 display: "flex",
                 alignItems: "center",
-                gap: "8px",
+                gap: "6px",
+                padding: "4px 10px",
+                background: isDarkMode ? "#374151" : "rgba(255, 255, 255, 0.9)",
+                border: `1px solid ${isDarkMode ? "#4b5563" : "#d1d5db"}`,
+                borderRadius: "20px",
+                cursor: "pointer",
+                fontSize: "12px",
+                fontWeight: "bold",
+                boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
                 transition: "all 0.2s ease",
-                boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-                marginBottom: "10px"
+                color: isDarkMode ? "#fff" : "#374151"
             }}
             onMouseEnter={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.transform = "scale(1.05)";
-                (e.currentTarget as HTMLButtonElement).style.background = isDarkMode ? "#374151" : "#f8fafc";
+                e.currentTarget.style.borderColor = "#6366f1";
+                e.currentTarget.style.transform = "translateY(-1px)";
             }}
             onMouseLeave={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
-                (e.currentTarget as HTMLButtonElement).style.background = isDarkMode ? "#1f2937" : "#ffffff";
+                e.currentTarget.style.borderColor = isDarkMode ? "#4b5563" : "#d1d5db";
+                e.currentTarget.style.transform = "translateY(0)";
             }}
         >
-            <span style={{ fontSize: "14px" }}>{locale === "ja" ? "🇯🇵" : "🇺🇸"}</span>
-            {locale === "ja" ? "日本語" : "English"}
+            <span style={{ fontSize: "16px" }}>
+                {locale === "ja" ? "🇯🇵" : "🇺🇸"}
+            </span>
+            <span>{locale === "ja" ? "日本語" : "English"}</span>
         </button>
     );
 }
