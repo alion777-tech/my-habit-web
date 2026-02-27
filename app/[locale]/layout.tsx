@@ -56,18 +56,18 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         style={{ position: "relative" }}
       >
-        <div style={{
-          position: "fixed",
-          top: 10,
-          right: 10,
-          zIndex: 9999,
-          display: "flex",
-          gap: 10,
-          alignItems: "center"
-        }}>
-          <LanguageSwitcher />
-        </div>
         <NextIntlClientProvider messages={messages}>
+          <div style={{
+            position: "fixed",
+            top: 10,
+            right: 10,
+            zIndex: 9999,
+            display: "flex",
+            gap: 10,
+            alignItems: "center"
+          }}>
+            <LanguageSwitcher />
+          </div>
           {children}
         </NextIntlClientProvider>
         <script
