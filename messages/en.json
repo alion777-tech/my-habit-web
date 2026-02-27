@@ -108,7 +108,7 @@
         "title": "Habit",
         "placeholder": "e.g. 5 min English",
         "daily": "Daily",
-        "weekly": "Weekly (特定曜日)",
+        "weekly": "Weekly",
         "addButton": "Add",
         "noHabits": "No habits yet",
         "streak": "{days} day streak",
@@ -209,6 +209,6 @@
         "profile": "Profile",
         "friend": "Friend",
         "bucketList": "100 LIST",
-        "usage": "How to Use"
+        "usage": "How to"
     }
 }
