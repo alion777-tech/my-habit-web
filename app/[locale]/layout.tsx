@@ -54,8 +54,20 @@ export default async function RootLayout({
     <html lang={locale}>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        style={{ position: "relative" }}
+        style={{ position: "relative", border: "10px solid red" }}
       >
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          background: "red",
+          color: "white",
+          padding: "10px",
+          zIndex: 10000,
+          fontWeight: "bold"
+        }}>
+          DEBUG: VERSION 3
+        </div>
         <NextIntlClientProvider messages={messages}>
           <div style={{
             position: "fixed",
