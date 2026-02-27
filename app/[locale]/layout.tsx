@@ -59,11 +59,11 @@ export default async function RootLayout({
         <NextIntlClientProvider messages={messages}>
           <div style={{
             position: "fixed",
-            top: 10,
-            right: 10,
+            top: 20,
+            right: 20,
             zIndex: 9999,
             display: "flex",
-            gap: 10,
+            gap: 12,
             alignItems: "center"
           }}>
             <LanguageSwitcher />

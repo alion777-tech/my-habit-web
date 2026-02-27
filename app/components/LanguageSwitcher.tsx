@@ -17,25 +17,28 @@ export default function LanguageSwitcher({ isDarkMode = false }: { isDarkMode?: 
         <button
             onClick={toggleLanguage}
             style={{
-                padding: "6px 12px",
-                borderRadius: "20px",
-                border: isDarkMode ? "1px solid #4b5563" : "1px solid #e2e8f0",
-                background: isDarkMode ? "#374151" : "#f8fafc",
-                color: isDarkMode ? "#f3f4f6" : "#475569",
-                fontSize: "12px",
-                fontWeight: "600",
+                padding: "8px 16px",
+                borderRadius: "24px",
+                border: isDarkMode ? "3px solid #6366f1" : "3px solid #4f46e5",
+                background: isDarkMode ? "#1f2937" : "#ffffff",
+                color: isDarkMode ? "#ffffff" : "#4f46e5",
+                fontSize: "14px",
+                fontWeight: "bold",
                 cursor: "pointer",
                 display: "flex",
                 alignItems: "center",
-                gap: "6px",
+                gap: "8px",
                 transition: "all 0.2s ease",
-                boxShadow: "0 1px 2px rgba(0,0,0,0.05)"
+                boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+                marginBottom: "10px"
             }}
             onMouseEnter={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.background = isDarkMode ? "#4b5563" : "#f1f5f9";
+                (e.currentTarget as HTMLButtonElement).style.transform = "scale(1.05)";
+                (e.currentTarget as HTMLButtonElement).style.background = isDarkMode ? "#374151" : "#f8fafc";
             }}
             onMouseLeave={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.background = isDarkMode ? "#374151" : "#f8fafc";
+                (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
+                (e.currentTarget as HTMLButtonElement).style.background = isDarkMode ? "#1f2937" : "#ffffff";
             }}
         >
             <span style={{ fontSize: "14px" }}>{locale === "ja" ? "🇯🇵" : "🇺🇸"}</span>
