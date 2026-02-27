@@ -775,9 +775,7 @@ export default function Home() {
         transition: "background 0.3s"
       }}>
         <AuthBox isDarkMode={isDarkMode} />
-        <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
-          <LanguageSwitcher isDarkMode={isDarkMode} />
-        </div>
+
 
         {uid === null && !isLoading && (
           <div style={{ textAlign: "center", marginTop: 20 }}>
@@ -1025,6 +1023,7 @@ export default function Home() {
               >
                 🤝 フレンド
               </button>
+              <LanguageSwitcher isDarkMode={isDarkMode} />
             </div>
             <div style={{
               fontSize: 14,

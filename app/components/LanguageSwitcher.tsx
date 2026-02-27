@@ -17,27 +17,26 @@ export default function LanguageSwitcher({ isDarkMode = false }: { isDarkMode?: 
         <button
             onClick={toggleLanguage}
             style={{
+                flex: 1,
                 display: "flex",
                 alignItems: "center",
+                justifyContent: "center",
                 gap: "6px",
-                padding: "4px 10px",
-                background: isDarkMode ? "#374151" : "rgba(255, 255, 255, 0.9)",
-                border: `1px solid ${isDarkMode ? "#4b5563" : "#d1d5db"}`,
-                borderRadius: "20px",
+                padding: "10px 4px",
+                background: isDarkMode ? "transparent" : "#e5e7eb",
+                color: isDarkMode ? "#fff" : "#374151",
+                border: isDarkMode ? "1.5px solid #fff" : "none",
+                borderRadius: "8px",
                 cursor: "pointer",
-                fontSize: "12px",
+                fontSize: "13px",
                 fontWeight: "bold",
-                boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
                 transition: "all 0.2s ease",
-                color: isDarkMode ? "#fff" : "#374151"
             }}
             onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = "#6366f1";
-                e.currentTarget.style.transform = "translateY(-1px)";
+                e.currentTarget.style.background = isDarkMode ? "rgba(255,255,255,0.1)" : "#d1d5db";
             }}
             onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = isDarkMode ? "#4b5563" : "#d1d5db";
-                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.background = isDarkMode ? "transparent" : "#e5e7eb";
             }}
         >
             <span style={{ fontSize: "16px" }}>
