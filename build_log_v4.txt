@@ -1,0 +1,31 @@
+
+> my-habit-web@0.1.0 build
+> next build --webpack
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+   笆ｲ Next.js 16.0.10 (webpack)
+   - Environments: .env.local
+
+ 笞 The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+   Creating an optimized production build ...
+> [PWA] Compile server
+> [PWA] Compile server
+> [PWA] Compile client (static)
+> [PWA] Auto register service worker with: C:\dev\GitHub\my-habit-web\node_modules\next-pwa\register.js
+> [PWA] Service worker: C:\dev\GitHub\my-habit-web\public\sw.js
+> [PWA]   url: /sw.js
+> [PWA]   scope: /
+ 笨・Compiled successfully in 3.0s
+   Running TypeScript ...
+Failed to compile.
+
+.next/dev/types/app/layout.ts:2:24
+Type error: Cannot find module '../../../../app/layout.js' or its corresponding type declarations.
+
+  1 | // File: C:\dev\GitHub\my-habit-web\app\layout.tsx
+> 2 | import * as entry from '../../../../app/layout.js'
+    |                        ^
+  3 | import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
+  4 |
+  5 | import type { PrefetchForTypeCheckInternal } from 'next/dist/build/segment-config/app/app-segment-config.js'
+Next.js build worker exited with code: 1 and signal: null
