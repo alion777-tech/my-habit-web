@@ -12,6 +12,8 @@ type Props = {
   toggleDarkMode: () => void;
 };
 
+import { useTranslations } from "next-intl";
+
 export default function TitleView({
   level,
   earnedTitles,
@@ -19,19 +21,21 @@ export default function TitleView({
   isDarkMode,
   toggleDarkMode,
 }: Props) {
+  const t = useTranslations("Title");
+
   const categoryNames: Record<string, string> = {
-    royalty: "👑 王道",
-    continuity: "⏳ 継続系",
-    points: "💎 累計ポイント",
-    streak: "🔥 連続達成",
-    level: "📈 レベルアップ",
-    effort: "💪 ガチ努力系",
-    hidden: "🌟 隠し称号"
+    royalty: t("categories.royalty"),
+    continuity: t("categories.continuity"),
+    points: t("categories.points"),
+    streak: t("categories.streak"),
+    level: t("categories.level"),
+    effort: t("categories.effort"),
+    hidden: t("categories.hidden")
   };
 
   return (
     <div>
-      <h2 style={{ fontSize: 24, marginBottom: 16, textAlign: "center", color: isDarkMode ? "#fff" : "#1f2937" }}>🏅 獲得称号</h2>
+      <h2 style={{ fontSize: 24, marginBottom: 16, textAlign: "center", color: isDarkMode ? "#fff" : "#1f2937" }}>{t("title")}</h2>
 
       <div style={{
         textAlign: "center",
@@ -42,7 +46,7 @@ export default function TitleView({
         color: isDarkMode ? "#c7d2fe" : "#4338ca",
         fontWeight: "bold"
       }}>
-        現在のレベル: Lv {level}
+        {t("currentLevel", { level })}
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 24, marginBottom: 40 }}>
@@ -84,7 +88,7 @@ export default function TitleView({
         {earnedTitles.length === 0 && (
           <div style={{ textAlign: "center", padding: "40px 0", color: "#888" }}>
             <p style={{ fontSize: 32, marginBottom: 12 }}>🌑</p>
-            <p style={{ fontSize: 14 }}>まだ称号を獲得していません。<br />まずは「新人デビュー」を目指そう！</p>
+            <p style={{ fontSize: 14 }}>{t("noTitles")}<br />{t("noTitlesDesc")}</p>
           </div>
         )}
       </div>
@@ -107,7 +111,7 @@ export default function TitleView({
             boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
           }}
         >
-          {isDarkMode ? "☀️ ライトモード" : "🌙 ダークモード"}
+          {isDarkMode ? t("lightMode") : t("darkMode")}
         </button>
       </div>
     </div>

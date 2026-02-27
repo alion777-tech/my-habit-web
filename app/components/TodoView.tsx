@@ -30,6 +30,8 @@ type Props = {
   incrementStats: (type: "goals" | "todos" | "habits") => Promise<void>;
 };
 
+import { useTranslations } from "next-intl";
+
 export default function TodoView({
   uid,
   todos,
@@ -43,10 +45,12 @@ export default function TodoView({
   checkLimit,
   incrementStats,
 }: Props) {
+  const t = useTranslations("Todo");
+
   return (
     <div>
       <h2 style={{ fontSize: 18, marginBottom: 16, color: isDarkMode ? "#fff" : "#000" }}>
-        📝 ToDo
+        {t("title")}
       </h2>
 
 
@@ -54,7 +58,7 @@ export default function TodoView({
       <input
         value={todoInput}
         onChange={(e) => setTodoInput(e.target.value)}
-        placeholder="やることを書く"
+        placeholder={t("placeholder")}
         style={{
           width: "100%",
           padding: UI.inputPad,
@@ -92,7 +96,7 @@ export default function TodoView({
           }}
 
         >
-          追加
+          {t("addButton")}
         </button>
       </div>
 
@@ -101,8 +105,8 @@ export default function TodoView({
         {/* ===== 未完了 ===== */}
         {todos
           .filter((t) => !t.done)
-          .map((t) => (
-            <li key={t.id} style={{
+          .map((item) => (
+            <li key={item.id} style={{
               marginBottom: 10,
               display: "flex",
               alignItems: "center",
@@ -114,16 +118,16 @@ export default function TodoView({
               {/* ✔ 完了チェック */}
               <input
                 type="checkbox"
-                checked={t.done}
+                checked={item.done}
                 onChange={() => {
                   if (!uid) return;
-                  toggleTodo(uid, t.id, t.done);
+                  toggleTodo(uid, item.id, item.done);
                 }}
                 style={{ width: 18, height: 18, cursor: "pointer" }}
               />
 
               {/* ✏ 編集 */}
-              {editingTodoId === t.id ? (
+              {editingTodoId === item.id ? (
                 <input
                   value={editingTodoText}
                   onChange={(e) => setEditingTodoText(e.target.value)}
@@ -131,7 +135,7 @@ export default function TodoView({
                     if (!uid) return;
                     if (!editingTodoText.trim()) return;
 
-                    await updateTodo(uid, t.id, editingTodoText);
+                    await updateTodo(uid, item.id, editingTodoText);
 
                     setEditingTodoId(null);
                     setEditingTodoText("");
@@ -158,11 +162,11 @@ export default function TodoView({
                     color: isDarkMode ? "#f3f4f6" : "#1f2937"
                   }}
                   onDoubleClick={() => {
-                    setEditingTodoId(t.id);
-                    setEditingTodoText(t.text);
+                    setEditingTodoId(item.id);
+                    setEditingTodoText(item.text);
                   }}
                 >
-                  {t.text}
+                  {item.text}
                 </span>
               )}
 
@@ -178,7 +182,7 @@ export default function TodoView({
                 }}
                 onClick={() => {
                   if (!uid) return;
-                  deleteTodo(uid, t.id);
+                  deleteTodo(uid, item.id);
                 }}
               >
                 🗑
@@ -189,9 +193,9 @@ export default function TodoView({
         {/* ===== 完了 ===== */}
         {todos
           .filter((t) => t.done)
-          .map((t) => (
+          .map((item) => (
             <li
-              key={t.id}
+              key={item.id}
               style={{
                 marginBottom: 10,
                 display: "flex",
@@ -206,10 +210,10 @@ export default function TodoView({
               {/* ✔ 完了チェック（戻せる） */}
               <input
                 type="checkbox"
-                checked={t.done}
+                checked={item.done}
                 onChange={async () => {
                   if (!uid) return;
-                  await toggleTodo(uid, t.id, t.done);
+                  await toggleTodo(uid, item.id, item.done);
                 }}
                 style={{ width: 18, height: 18, cursor: "pointer" }}
               />
@@ -221,7 +225,7 @@ export default function TodoView({
                 color: isDarkMode ? "#9ca3af" : "#888",
                 fontSize: UI.font,
               }}>
-                {t.text}
+                {item.text}
               </span>
 
               {/* 🗑 削除（完了後も可能） */}
@@ -236,7 +240,7 @@ export default function TodoView({
                 }}
                 onClick={() => {
                   if (!uid) return;
-                  deleteTodo(uid, t.id);
+                  deleteTodo(uid, item.id);
                 }}
               >
                 🗑

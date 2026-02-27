@@ -24,10 +24,15 @@ type Props = {
     isDarkMode?: boolean;
 };
 
+import { useTranslations } from "next-intl";
+
 export default function BucketListView({ uid, isDarkMode = false }: Props) {
+    const t = useTranslations("BucketList");
+    const tc = useTranslations("Common");
+
     const [data, setData] = useState<BucketListData>({
-        title: "死ぬまでにしたい100のこと",
-        subtitle: "Bucket List 100",
+        title: t("titleDefault"),
+        subtitle: t("subtitleDefault"),
         items: Array.from({ length: 100 }, (_, i) => ({
             id: i + 1,
             text: "",
@@ -62,8 +67,8 @@ export default function BucketListView({ uid, isDarkMode = false }: Props) {
                 });
 
                 setData({
-                    title: saved.title || "死ぬまでにしたい100のこと",
-                    subtitle: saved.subtitle || "Bucket List 100",
+                    title: saved.title || t("titleDefault"),
+                    subtitle: saved.subtitle || t("subtitleDefault"),
                     targetDate: saved.targetDate || null,
                     items: mergedItems
                 });
@@ -104,11 +109,11 @@ export default function BucketListView({ uid, isDarkMode = false }: Props) {
     };
 
     const handleReset = async () => {
-        if (!window.confirm("全てのリストをリセットしますか？この操作は取り消せません。")) return;
+        if (!window.confirm(t("resetConfirm"))) return;
 
         const newData = {
-            title: "死ぬまでにしたい100のこと",
-            subtitle: "Bucket List 100",
+            title: t("titleDefault"),
+            subtitle: t("subtitleDefault"),
             targetDate: null,
             items: Array.from({ length: 100 }, (_, i) => ({
                 id: i + 1,
@@ -126,7 +131,7 @@ export default function BucketListView({ uid, isDarkMode = false }: Props) {
     const isAllCompleted = completedCount === 100;
 
     if (isLoading) {
-        return <div style={{ padding: 20, textAlign: "center", color: isDarkMode ? "#ccc" : "#666" }}>Loading...</div>;
+        return <div style={{ padding: 20, textAlign: "center", color: isDarkMode ? "#ccc" : "#666" }}>{tc("loading")}</div>;
     }
 
     return (
@@ -161,10 +166,12 @@ export default function BucketListView({ uid, isDarkMode = false }: Props) {
                 )}
 
                 {(() => {
-                    // Title format: "Prefix" + "までに" + "したい100のこと"
-                    const fullSuffix = "までにしたい100のこと";
-                    const suffixPart1 = "までに";
-                    const suffixPart2 = "したい100のこと";
+                    // Title format logic needs to be flexible for i18n
+                    // For Japanese: [prefix] + "までに" + "したい100のこと"
+                    // For English: it might be different, but let's stick to part replacements
+                    const part1 = t("suffixPart1");
+                    const part2 = t("suffixPart2");
+                    const fullSuffix = part1 + part2;
 
                     const hasSuffix = data.title.endsWith(fullSuffix);
                     const prefix = hasSuffix ? data.title.slice(0, -fullSuffix.length) : data.title;
@@ -178,7 +185,7 @@ export default function BucketListView({ uid, isDarkMode = false }: Props) {
                                     justifyContent: "flex-start",
                                     alignItems: "baseline",
                                     gap: 2,
-                                    transform: "translateX(10px)", // ←ここ追加
+                                    transform: "translateX(10px)",
                                 }}
                             >
 
@@ -202,12 +209,12 @@ export default function BucketListView({ uid, isDarkMode = false }: Props) {
                                         maxWidth: "70%"
                                     }}
                                 />
-                                <span style={{ fontSize: 24, fontWeight: "bold" }}>{suffixPart1}</span>
+                                <span style={{ fontSize: 24, fontWeight: "bold" }}>{part1}</span>
                             </div>
 
                             {/* Row 2: Right Aligned [suffixPart2] */}
                             <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 4 }}>
-                                <span style={{ fontSize: 24, fontWeight: "bold" }}>{suffixPart2}</span>
+                                <span style={{ fontSize: 24, fontWeight: "bold" }}>{part2}</span>
                             </div>
                         </div>
                     ) : (
@@ -228,17 +235,17 @@ export default function BucketListView({ uid, isDarkMode = false }: Props) {
                                     justifyContent: "flex-start",
                                     alignItems: "baseline",
                                     gap: 4,
-                                    transform: "translateX(10px)", // ←ここだけ調整（8〜16pxくらいで好み）
+                                    transform: "translateX(10px)",
                                 }}
                             >
                                 <span style={{ fontSize: 24, fontWeight: "bold" }}>{prefix}</span>
-                                <span style={{ fontSize: 24, fontWeight: "bold" }}>{suffixPart1}</span>
+                                <span style={{ fontSize: 24, fontWeight: "bold" }}>{part1}</span>
                             </div>
 
 
                             {/* Row 2: Right Aligned */}
                             <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 4 }}>
-                                <span style={{ fontSize: 24, fontWeight: "bold" }}>{suffixPart2}</span>
+                                <span style={{ fontSize: 24, fontWeight: "bold" }}>{part2}</span>
                                 <span style={{ fontSize: 16, opacity: 0.5 }}>✏️</span>
                             </div>
                         </h1>
@@ -248,7 +255,7 @@ export default function BucketListView({ uid, isDarkMode = false }: Props) {
                 {/* Global Deadline Picker */}
                 <div style={{ marginBottom: 16 }}>
                     <label style={{ fontSize: 12, marginRight: 8, color: isDarkMode ? "#9ca3af" : "#6b7280" }}>
-                        📅 達成目標日:
+                        {t("targetDateLabel")}
                     </label>
                     <input
                         type="date"
@@ -298,11 +305,8 @@ export default function BucketListView({ uid, isDarkMode = false }: Props) {
                     color: "#1f2937"
                 }}>
                     <div style={{ fontSize: 40, marginBottom: 8 }}>🎉</div>
-                    <h3 style={{ fontSize: 18, fontWeight: "bold", marginBottom: 8 }}>おめでとうございます！</h3>
-                    <p style={{ fontSize: 14, marginBottom: 16 }}>
-                        100個のリストをすべて達成しました！<br />
-                        素晴らしい成果です。新たな夢に向かって進みましょう。
-                    </p>
+                    <h3 style={{ fontSize: 18, fontWeight: "bold", marginBottom: 8 }}>{t("congratsTitle")}</h3>
+                    <p style={{ fontSize: 14, marginBottom: 16 }} dangerouslySetInnerHTML={{ __html: t("congratsDesc") }} />
                     <button
                         onClick={handleReset}
                         style={{
@@ -315,7 +319,7 @@ export default function BucketListView({ uid, isDarkMode = false }: Props) {
                             cursor: "pointer"
                         }}
                     >
-                        リストをリセットして再挑戦
+                        {t("resetButton")}
                     </button>
                 </div>
             )}
@@ -372,7 +376,7 @@ export default function BucketListView({ uid, isDarkMode = false }: Props) {
                                             setEditingItemId(null);
                                         }}
                                         autoFocus
-                                        placeholder="したいことを入力..."
+                                        placeholder={t("placeholder")}
                                         style={{
                                             width: "100%",
                                             padding: UI.padXs,
@@ -399,7 +403,7 @@ export default function BucketListView({ uid, isDarkMode = false }: Props) {
                                             textDecoration: item.isCompleted ? "line-through" : "none"
                                         }}
                                     >
-                                        {item.text || <span style={{ color: isDarkMode ? "#6b7280" : "#d1d5db", fontSize: 12 }}>（ダブルクリックで入力）</span>}
+                                        {item.text || <span style={{ color: isDarkMode ? "#6b7280" : "#d1d5db", fontSize: 12 }}>{t("doubleClickTip")}</span>}
                                     </div>
                                 )}
                             </div>

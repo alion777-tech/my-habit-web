@@ -17,7 +17,11 @@ type Props = {
     isDarkMode?: boolean;
 };
 
+import { useTranslations } from "next-intl";
+
 export default function FriendView({ uid, currentUserName, isDarkMode = false }: Props) {
+    const t = useTranslations("Friend");
+    const tc = useTranslations("Common");
     const isAnonymous = auth.currentUser?.isAnonymous;
 
     // 名前がない場合に登録モードへ
@@ -73,7 +77,7 @@ export default function FriendView({ uid, currentUserName, isDarkMode = false }:
             await followUser(uid, targetUid);
             await loadFollowing();
         } catch (e) {
-            alert("フォローに失敗しました");
+            alert(tc("saveError"));
         } finally {
             setActionLoading(null);
         }
@@ -81,13 +85,13 @@ export default function FriendView({ uid, currentUserName, isDarkMode = false }:
 
     const handleUnfollow = async (targetUid: string) => {
         if (!uid) return;
-        if (!confirm("フォローを解除しますか？")) return;
+        if (!confirm(tc("confirmDelete"))) return;
         setActionLoading(targetUid);
         try {
             await unfollowUser(uid, targetUid);
             await loadFollowing();
         } catch (e) {
-            alert("解除に失敗しました");
+            alert(tc("saveError"));
         } finally {
             setActionLoading(null);
         }
@@ -95,12 +99,13 @@ export default function FriendView({ uid, currentUserName, isDarkMode = false }:
 
     // 新規登録 or 名前再設定処理 (公開確認ステップ付)
     const handleRegister = async (isPublic: boolean) => {
+        const profil_t = useTranslations("Profile");
         if (!uid || !regName.trim()) {
-            alert("名前を入力してください");
+            alert(profil_t("enterName"));
             return;
         }
         if (!regGender || (regGender !== "male" && regGender !== "female")) {
-            alert("性別を選択してください");
+            alert(profil_t("selectGender"));
             return;
         }
         try {
@@ -110,14 +115,14 @@ export default function FriendView({ uid, currentUserName, isDarkMode = false }:
                 isPublic: isPublic,
             });
             setIsRegistering(false);
-            alert("設定を保存しました！");
+            alert(profil_t("saveSuccess"));
         } catch (e) {
             console.error(e);
-            alert("保存に失敗しました");
+            alert(profil_t("saveError"));
         }
     };
 
-    if (isAnonymous) return <div style={{ padding: 20, textAlign: "center", color: "#888" }}>Google連携が必要です</div>;
+    if (isAnonymous) return <div style={{ padding: 20, textAlign: "center", color: "#888" }}>{t("googleJoinRequired")}</div>;
 
     // 新規登録UI (名前・性別 -> 公開確認)
     if (isRegistering) {
@@ -132,10 +137,10 @@ export default function FriendView({ uid, currentUserName, isDarkMode = false }:
             }}>
                 {regStep === "input" ? (
                     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                        <h3 style={{ fontSize: 18, color: isDarkMode ? "#fff" : "#000", fontWeight: "bold" }}>👤 プロフィール登録</h3>
-                        <p style={{ fontSize: 13, color: isDarkMode ? "#d1d5db" : "#666" }}>フレンド機能を使うために、<br />名前と性別を入力してください。</p>
+                        <h3 style={{ fontSize: 18, color: isDarkMode ? "#fff" : "#000", fontWeight: "bold" }}>{t("registerTitle")}</h3>
+                        <p style={{ fontSize: 13, color: isDarkMode ? "#d1d5db" : "#666" }} dangerouslySetInnerHTML={{ __html: t("registerDesc") }} />
                         <input
-                            placeholder="名前 (ニックネーム)"
+                            placeholder={t("namePlaceholder")}
                             value={regName}
                             onChange={(e) => setRegName(e.target.value)}
                             style={{
@@ -158,7 +163,7 @@ export default function FriendView({ uid, currentUserName, isDarkMode = false }:
                                     fontWeight: "bold"
                                 }}
                             >
-                                👨 男性
+                                {t("maleButton")}
                             </button>
                             <button
                                 onClick={() => setRegGender("female")}
@@ -170,7 +175,7 @@ export default function FriendView({ uid, currentUserName, isDarkMode = false }:
                                     fontWeight: "bold"
                                 }}
                             >
-                                👩 女性
+                                {t("femaleButton")}
                             </button>
                         </div>
                         <button
@@ -188,34 +193,31 @@ export default function FriendView({ uid, currentUserName, isDarkMode = false }:
                                 fontSize: 16
                             }}
                         >
-                            次へ
+                            {t("nextButton")}
                         </button>
                     </div>
                 ) : (
                     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                        <h3 style={{ fontSize: 18, color: isDarkMode ? "#fff" : "#000", fontWeight: "bold" }}>🌍 公開設定の確認</h3>
-                        <p style={{ fontSize: 14, color: isDarkMode ? "#d1d5db" : "#4b5563", lineHeight: 1.5 }}>
-                            プロフィールを<strong>公開</strong>して、<br />
-                            他のユーザーから検索できるようにしますか？
-                        </p>
+                        <h3 style={{ fontSize: 18, color: isDarkMode ? "#fff" : "#000", fontWeight: "bold" }}>{t("publicConfirmTitle")}</h3>
+                        <p style={{ fontSize: 14, color: isDarkMode ? "#d1d5db" : "#4b5563", lineHeight: 1.5 }} dangerouslySetInnerHTML={{ __html: t("publicConfirmDesc") }} />
                         <div style={{ padding: 12, background: isDarkMode ? "#374151" : "#f9fafb", borderRadius: 8, fontSize: 12, color: "#888", textAlign: "left" }}>
-                            ※公開すると、他のユーザーがあなたを検索してフォローできるようになります。後からいつでも変更可能です。
+                            {t("publicConfirmNote")}
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 10 }}>
                             <button
                                 onClick={() => handleRegister(true)}
                                 style={{ padding: "14px", background: "#10b981", color: "#fff", border: "none", borderRadius: 8, fontWeight: "bold", cursor: "pointer", fontSize: 16 }}
                             >
-                                公開して始める
+                                {t("publicStartButton")}
                             </button>
                             <button
                                 onClick={() => handleRegister(false)}
                                 style={{ padding: "12px", background: "transparent", color: "#888", border: isDarkMode ? "1px solid #4b5563" : "1px solid #ccc", borderRadius: 8, cursor: "pointer" }}
                             >
-                                非公開で始める
+                                {t("privateStartButton")}
                             </button>
                         </div>
-                        <button onClick={() => setRegStep("input")} style={{ background: "none", border: "none", color: "#999", fontSize: 12, textDecoration: "underline", cursor: "pointer" }}>戻る</button>
+                        <button onClick={() => setRegStep("input")} style={{ background: "none", border: "none", color: "#999", fontSize: 12, textDecoration: "underline", cursor: "pointer" }}>{t("backButton")}</button>
                     </div>
                 )}
             </div>
@@ -255,10 +257,10 @@ export default function FriendView({ uid, currentUserName, isDarkMode = false }:
         const diffTime = Math.abs(now.getTime() - date.getTime());
         const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
-        if (diffDays === 0) return "今日ログインあり";
-        if (diffDays === 1) return "1日ログインなし";
-        if (diffDays >= 7) return "7日以上ログインなし";
-        return `${diffDays}日ログインなし`;
+        if (diffDays === 0) return t("loginStatus.today");
+        if (diffDays === 1) return t("loginStatus.yesterday");
+        if (diffDays >= 7) return t("loginStatus.week");
+        return t("loginStatus.days", { days: diffDays });
     };
 
     const UserCard = ({ user, showActivity = false }: { user: UserProfile, showActivity?: boolean }) => {
@@ -279,7 +281,11 @@ export default function FriendView({ uid, currentUserName, isDarkMode = false }:
                     fontWeight: "bold",
                     boxShadow: isDarkMode ? "0 2px 4px rgba(0,0,0,0.2)" : "0 1px 2px rgba(0,0,0,0.05)"
                 }}>
-                    📢 {user.name}が {user.recentAction.type === "dream" ? "夢" : "目標"}：{user.recentAction.text} を達成しました！
+                    {t("achievedFeed", {
+                        name: user.name,
+                        type: user.recentAction.type === "dream" ? t("dream") : t("goal"),
+                        text: user.recentAction.text
+                    })}
                 </div>
             );
         }
@@ -302,7 +308,7 @@ export default function FriendView({ uid, currentUserName, isDarkMode = false }:
                         </div>
                         <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 4 }}>
                             {user.showDream && (
-                                <div style={{ fontSize: 11, color: "#6366f1" }}>🌈 {user.dream || "夢は秘密"}</div>
+                                <div style={{ fontSize: 11, color: "#6366f1" }}>🌈 {user.dream || t("secretDream")}</div>
                             )}
                             {loginStatus && (
                                 <div style={{ fontSize: 11, color: "#888" }}>🕒 {loginStatus}</div>
@@ -321,7 +327,7 @@ export default function FriendView({ uid, currentUserName, isDarkMode = false }:
                                 opacity: actionLoading === user.uid ? 0.7 : 1
                             }}
                         >
-                            {isFollowing ? "フォロー中" : "フォロー"}
+                            {isFollowing ? t("following") : t("follow")}
                         </button>
                     )}
                 </div>
@@ -331,7 +337,7 @@ export default function FriendView({ uid, currentUserName, isDarkMode = false }:
 
     return (
         <div style={{ padding: "0 4px" }}>
-            <h2 style={{ fontSize: 18, marginBottom: 16, color: isDarkMode ? "#fff" : "#000", textAlign: "center" }}>🤝 フレンド</h2>
+            <h2 style={{ fontSize: 18, marginBottom: 16, color: isDarkMode ? "#fff" : "#000", textAlign: "center" }}>{t("title")}</h2>
 
             {/* 囲われたタブ選択エリア */}
             <div style={{
@@ -340,9 +346,9 @@ export default function FriendView({ uid, currentUserName, isDarkMode = false }:
                 borderRadius: 12, border: isDarkMode ? "1px solid #374151" : "1px solid #e5e7eb",
                 marginBottom: 16
             }}>
-                <div onClick={() => { setActiveTab("feed"); setHasSearched(false); }} style={tabStyle(activeTab === "feed")}>みんなの近況</div>
-                <div onClick={() => { setActiveTab("following"); setHasSearched(false); }} style={tabStyle(activeTab === "following")}>フォロー中</div>
-                <div onClick={() => { setActiveTab("search"); setHasSearched(false); }} style={tabStyle(activeTab === "search")}>検索</div>
+                <div onClick={() => { setActiveTab("feed"); setHasSearched(false); }} style={tabStyle(activeTab === "feed")}>{t("tabFeed")}</div>
+                <div onClick={() => { setActiveTab("following"); setHasSearched(false); }} style={tabStyle(activeTab === "following")}>{t("tabFollowing")}</div>
+                <div onClick={() => { setActiveTab("search"); setHasSearched(false); }} style={tabStyle(activeTab === "search")}>{t("tabSearch")}</div>
             </div>
 
             {/* 囲われたメインコンテンツエリア */}
@@ -364,7 +370,7 @@ export default function FriendView({ uid, currentUserName, isDarkMode = false }:
                             })
                             .map(u => <UserCard key={u.uid} user={u} showActivity={true} />)}
                         {followingList.filter(u => u.recentAction).length === 0 && (
-                            <p style={{ textAlign: "center", color: "#888", fontSize: 13, marginTop: 40 }}>近況はありません</p>
+                            <p style={{ textAlign: "center", color: "#888", fontSize: 13, marginTop: 40 }}>{t("noAction")}</p>
                         )}
                     </>
                 )}
@@ -372,7 +378,7 @@ export default function FriendView({ uid, currentUserName, isDarkMode = false }:
                 {activeTab === "following" && (
                     <>
                         {followingList.map(u => <UserCard key={u.uid} user={u} />)}
-                        {followingList.length === 0 && <p style={{ textAlign: "center", color: "#888", fontSize: 13, marginTop: 40 }}>フォローしている人はいません</p>}
+                        {followingList.length === 0 && <p style={{ textAlign: "center", color: "#888", fontSize: 13, marginTop: 40 }}>{t("noFollowing")}</p>}
                     </>
                 )}
 
@@ -380,7 +386,7 @@ export default function FriendView({ uid, currentUserName, isDarkMode = false }:
                     <>
                         <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
                             <input
-                                placeholder="名前や夢で検索..."
+                                placeholder={t("searchPlaceholder")}
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
@@ -401,13 +407,13 @@ export default function FriendView({ uid, currentUserName, isDarkMode = false }:
                                     fontSize: 12, fontWeight: "bold", cursor: "pointer"
                                 }}
                             >
-                                {loading ? "..." : "検索"}
+                                {loading ? t("searching") : t("searchButton")}
                             </button>
                         </div>
                         {searchResults.map(u => <UserCard key={u.uid} user={u} />)}
                         {hasSearched && !loading && searchResults.length === 0 && (
                             <p style={{ textAlign: "center", color: "#888", fontSize: 13, marginTop: 40 }}>
-                                ユーザーが見つかりませんでした
+                                {t("noUserFound")}
                             </p>
                         )}
                     </>

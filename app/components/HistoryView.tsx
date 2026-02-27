@@ -15,6 +15,8 @@ type Props = {
   isDarkMode?: boolean;
 };
 
+import { useTranslations } from "next-intl";
+
 export default function HistoryView({
   currentMonth,
   setCurrentMonth,
@@ -24,6 +26,8 @@ export default function HistoryView({
   habits,
   isDarkMode = false,
 }: Props) {
+  const t = useTranslations("History");
+
   const goPrevMonth = () => {
     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
     setSelectedDate(null);
@@ -58,14 +62,14 @@ export default function HistoryView({
 
   return (
     <div>
-      <h2 style={{ fontSize: 16, marginBottom: 12 }}>📈 ポイント履歴</h2>
+      <h2 style={{ fontSize: 16, marginBottom: 12 }}>📈 {t("title")}</h2>
 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 16 }}>
-        <button onClick={goPrevMonth} style={navButtonStyle}>◀ 前月</button>
+        <button onClick={goPrevMonth} style={navButtonStyle}>{t("prevMonth")}</button>
         <div style={{ fontWeight: "bold", color: isDarkMode ? "#fff" : "#000" }}>
-          {currentMonth.getFullYear()}年 {currentMonth.getMonth() + 1}月
+          {currentMonth.getFullYear()} / {currentMonth.getMonth() + 1}
         </div>
-        <button onClick={goNextMonth} style={navButtonStyle}>次月 ▶</button>
+        <button onClick={goNextMonth} style={navButtonStyle}>{t("nextMonth")}</button>
       </div>
 
       <div
@@ -106,7 +110,7 @@ export default function HistoryView({
 
       {!selectedDate && (
         <p style={{ fontSize: 12, color: "#888", textAlign: "center", padding: 10 }}>
-          カレンダーから日付を選んでください
+          {t("selectDate")}
         </p>
       )}
 
@@ -119,7 +123,7 @@ export default function HistoryView({
         }}>
           {items.length === 0 ? (
             <p style={{ fontSize: 12, color: "#888", textAlign: "center", margin: 0 }}>
-              この日はポイント履歴がありません
+              {t("noPoints")}
             </p>
           ) : (
             items.map(({ habit, dayPoints }) => (

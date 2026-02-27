@@ -18,7 +18,11 @@ type Props = {
   isDarkMode?: boolean;
 };
 
+import { useTranslations } from "next-intl";
+
 export default function ProfileView({ uid, profile, setProfile, onSave, isDarkMode = false }: Props) {
+  const t = useTranslations("Profile");
+
   return (
     <div
       style={{
@@ -29,12 +33,14 @@ export default function ProfileView({ uid, profile, setProfile, onSave, isDarkMo
         border: isDarkMode ? "1px solid #374151" : "1px solid #eee",
       }}
     >
-      <h2 style={{ fontSize: 20, marginBottom: 20, color: isDarkMode ? "#fff" : "#000" }}>👤 プロフィール設定</h2>
+      <h2 style={{ fontSize: 20, marginBottom: 20, color: isDarkMode ? "#fff" : "#000" }}>{t("title")}</h2>
 
       <div style={{ marginBottom: 16 }}>
-        <label style={{ display: "block", fontSize: 13, marginBottom: 6, color: isDarkMode ? "#d1d5db" : "#4b5563" }}>名前 <span style={{ color: "#ef4444" }}>* 必須</span></label>
+        <label style={{ display: "block", fontSize: 13, marginBottom: 6, color: isDarkMode ? "#d1d5db" : "#4b5563" }}>
+          {t("nameLabel")} <span style={{ color: "#ef4444" }}>{t("required")}</span>
+        </label>
         <input
-          placeholder="名前"
+          placeholder={t("name")}
           value={profile.name}
           onChange={(e) => setProfile({ ...profile, name: e.target.value })}
           style={{
@@ -51,7 +57,7 @@ export default function ProfileView({ uid, profile, setProfile, onSave, isDarkMo
       </div>
 
       <div style={{ marginBottom: 20 }}>
-        <label style={{ display: "block", fontSize: 13, marginBottom: 8, color: isDarkMode ? "#d1d5db" : "#4b5563" }}>性別</label>
+        <label style={{ display: "block", fontSize: 13, marginBottom: 8, color: isDarkMode ? "#d1d5db" : "#4b5563" }}>{t("genderLabel")}</label>
         <div style={{ display: "flex", gap: 12 }}>
           <button
             onClick={() => setProfile({ ...profile, gender: "male" })}
@@ -74,7 +80,7 @@ export default function ProfileView({ uid, profile, setProfile, onSave, isDarkMo
               transition: "all 0.2s"
             }}
           >
-            ♂ 男性
+            {t("maleLabel")}
           </button>
           <button
             onClick={() => setProfile({ ...profile, gender: "female" })}
@@ -97,7 +103,7 @@ export default function ProfileView({ uid, profile, setProfile, onSave, isDarkMo
               transition: "all 0.2s"
             }}
           >
-            ♀ 女性
+            {t("femaleLabel")}
           </button>
         </div>
       </div>
@@ -117,7 +123,7 @@ export default function ProfileView({ uid, profile, setProfile, onSave, isDarkMo
             checked={profile.isPublic}
             onChange={(e) => setProfile({ ...profile, isPublic: e.target.checked })}
           />
-          プロフィールを公開する（検索に表示）
+          {t("publicProfileLabel")}
         </label>
 
         {profile.isPublic && (
@@ -137,7 +143,7 @@ export default function ProfileView({ uid, profile, setProfile, onSave, isDarkMo
                 checked={profile.showDream}
                 onChange={(e) => setProfile({ ...profile, showDream: e.target.checked })}
               />
-              私の夢を公開する
+              {t("showDreamLabel")}
             </label>
             <label style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, cursor: "pointer", color: isDarkMode ? "#d1d5db" : "#4b5563" }}>
               <input
@@ -145,7 +151,7 @@ export default function ProfileView({ uid, profile, setProfile, onSave, isDarkMo
                 checked={profile.showGoal}
                 onChange={(e) => setProfile({ ...profile, showGoal: e.target.checked })}
               />
-              現在の目標を公開する
+              {t("showGoalLabel")}
             </label>
             <label style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, cursor: "pointer", color: isDarkMode ? "#d1d5db" : "#4b5563" }}>
               <input
@@ -153,7 +159,7 @@ export default function ProfileView({ uid, profile, setProfile, onSave, isDarkMo
                 checked={profile.showLastLogin}
                 onChange={(e) => setProfile({ ...profile, showLastLogin: e.target.checked })}
               />
-              最終ログイン日時を公開する
+              {t("showLastLoginLabel")}
             </label>
           </div>
         )}
@@ -177,11 +183,11 @@ export default function ProfileView({ uid, profile, setProfile, onSave, isDarkMo
           boxShadow: isDarkMode ? "0 4px 6px -1px rgba(0, 0, 0, 0.3)" : "none"
         }}
       >
-        設定を保存
+        {t("saveButton")}
       </button>
 
       <div style={{ marginTop: 24, fontSize: 12, color: isDarkMode ? "#6b7280" : "#9ca3af", textAlign: "center" }}>
-        最終ログイン: {profile.lastLoginAt?.toDate ? profile.lastLoginAt.toDate().toLocaleString() : "---"}
+        {t("lastLoginLabel", { time: profile.lastLoginAt?.toDate ? profile.lastLoginAt.toDate().toLocaleString() : "---" })}
       </div>
     </div>
   );

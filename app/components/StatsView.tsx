@@ -18,6 +18,8 @@ type Props = {
   isDarkMode?: boolean;
 };
 
+import { useTranslations } from "next-intl";
+
 export default function StatsView({
   currentMonth,
   setCurrentMonth,
@@ -28,6 +30,8 @@ export default function StatsView({
   streak,
   isDarkMode = false,
 }: Props) {
+  const t = useTranslations("Stats");
+
   const navButtonStyle = {
     padding: "6px 12px",
     borderRadius: 8,
@@ -40,7 +44,7 @@ export default function StatsView({
 
   return (
     <div>
-      <h2 style={{ fontSize: 16, marginBottom: 12 }}>📊 達成率</h2>
+      <h2 style={{ fontSize: 16, marginBottom: 12 }}>📊 {t("title")}</h2>
 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 16 }}>
         <button
@@ -51,11 +55,11 @@ export default function StatsView({
             )
           }
         >
-          ◀ 前月
+          {t("prevMonth")}
         </button>
 
         <div style={{ fontWeight: "bold", color: isDarkMode ? "#fff" : "#000" }}>
-          {currentMonth.getFullYear()}年 {currentMonth.getMonth() + 1}月
+          {currentMonth.getFullYear()} / {currentMonth.getMonth() + 1}
         </div>
 
         <button
@@ -66,7 +70,7 @@ export default function StatsView({
             )
           }
         >
-          次月 ▶
+          {t("nextMonth")}
         </button>
       </div>
 
@@ -119,19 +123,19 @@ export default function StatsView({
         {selectedDate ? (
           (() => {
             const d = dailyStats.find((s) => s.date === selectedDate);
-            if (!d) return <p style={{ fontSize: 12, color: "#888", textAlign: "center", margin: 0 }}>データなし</p>;
+            if (!d) return <p style={{ fontSize: 12, color: "#888", textAlign: "center", margin: 0 }}>{t("noData")}</p>;
 
             return (
               <div style={{ fontSize: 13, textAlign: "center", color: isDarkMode ? "#fff" : "#000" }}>
                 <div style={{ fontWeight: "bold", marginBottom: 4 }}>{selectedDate}</div>
                 <div style={{ color: isDarkMode ? "#fbbf24" : "#4f46e5", fontWeight: "bold" }}>
-                  達成率: {d.rate}%（{d.doneCount}/{d.total}）
+                  {t("rate", { rate: d.rate, done: d.doneCount, total: d.total })}
                 </div>
               </div>
             );
           })()
         ) : (
-          <p style={{ fontSize: 12, color: "#888", textAlign: "center", margin: 0 }}>日付を選択して詳細を表示</p>
+          <p style={{ fontSize: 12, color: "#888", textAlign: "center", margin: 0 }}>{t("selectDate")}</p>
         )}
       </div>
 
@@ -141,9 +145,9 @@ export default function StatsView({
         background: isDarkMode ? "#374151" : "#eef2ff",
         border: isDarkMode ? "1px solid #4b5563" : "none"
       }}>
-        <h3 style={{ fontSize: 15, marginBottom: 8, color: isDarkMode ? "#fff" : "#4f46e5", fontWeight: "bold" }}>🔥 ストリーク</h3>
+        <h3 style={{ fontSize: 15, marginBottom: 8, color: isDarkMode ? "#fff" : "#4f46e5", fontWeight: "bold" }}>{t("streakTitle")}</h3>
         <p style={{ fontSize: 18, fontWeight: "bold", margin: 0, color: isDarkMode ? "#fbbf24" : "#1e40af" }}>
-          {streak} 日連続で達成中！
+          {t("streakMessage", { days: streak })}
         </p>
       </div>
     </div>

@@ -54,6 +54,8 @@ type Props = {
   isDarkMode?: boolean;
 };
 
+import { useTranslations } from "next-intl";
+
 export default function HabitView({
   habit,
   habitType,
@@ -78,13 +80,14 @@ export default function HabitView({
   setTestDayOffset,
   isDarkMode = false,
 }: Props) {
-
+  const t = useTranslations("Habit");
+  const tc = useTranslations("Common");
 
   return (
     <div>
       <input
         type="text"
-        placeholder="例：英語を5分"
+        placeholder={t("placeholder")}
         value={habit}
         onChange={(e) => setHabit(e.target.value)}
         style={{
@@ -104,7 +107,7 @@ export default function HabitView({
             checked={habitType === "daily"}
             onChange={() => setHabitType("daily")}
           />
-          毎日の習慣
+          {t("daily")}
         </label>
 
         <label style={{ marginLeft: 12, cursor: "pointer" }}>
@@ -113,12 +116,12 @@ export default function HabitView({
             checked={habitType === "weekly"}
             onChange={() => setHabitType("weekly")}
           />
-          曜日だけの習慣
+          {t("weekly")}
         </label>
       </div>
       {habitType === "weekly" && (
         <div style={{ marginBottom: 12, color: isDarkMode ? "#d1d5db" : "#000" }}>
-          {["日", "月", "火", "水", "木", "金", "土"].map((label, i) => (
+          {[0, 1, 2, 3, 4, 5, 6].map((i) => (
             <label key={i} style={{ marginRight: 6, cursor: "pointer" }}>
               <input
                 type="checkbox"
@@ -129,7 +132,7 @@ export default function HabitView({
                   );
                 }}
               />
-              {label}
+              {t(`days.${i}`)}
             </label>
           ))}
         </div>
@@ -150,11 +153,11 @@ export default function HabitView({
           cursor: "pointer",
         }}
       >
-        追加する
+        {t("addButton")}
       </button>
 
       {visibleHabits.length === 0 && (
-        <p style={{ color: "#888", textAlign: "center", padding: 20 }}>まだ習慣がありません</p>
+        <p style={{ color: "#888", textAlign: "center", padding: 20 }}>{t("noHabits")}</p>
       )}
       <ul style={{ paddingLeft: 0 }}>
         {visibleHabits.map((h) => {
@@ -221,13 +224,19 @@ export default function HabitView({
                     style={{ flex: 1 }}
                   >
                     <div style={{ fontWeight: "bold" }}>{h.text}</div>
-                    <div style={{ fontSize: 11, color: isDoneToday ? (isDarkMode ? "#34d399" : "#047857") : (isDarkMode ? "#9ca3af" : "#666"), marginTop: 2 }}>🔥 連続 {h.dailyStreak} 日</div>
+                    <div style={{ fontSize: 11, color: isDoneToday ? (isDarkMode ? "#34d399" : "#047857") : (isDarkMode ? "#9ca3af" : "#666"), marginTop: 2 }}>
+                      🔥 {t("streak", { days: h.dailyStreak })}
+                    </div>
                   </span>
                 )}
               </div>
 
               <button
-                onClick={() => onDeleteHabit(h.id)}
+                onClick={() => {
+                  if (window.confirm(t("confirmDelete"))) {
+                    onDeleteHabit(h.id);
+                  }
+                }}
                 style={{
                   border: "none",
                   background: "transparent",

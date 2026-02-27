@@ -43,6 +43,8 @@ type Props = {
   incrementStats: (type: "goals" | "todos" | "habits") => Promise<void>;
 };
 
+import { useTranslations } from "next-intl";
+
 export default function DreamView({
   uid,
   profile,
@@ -65,9 +67,12 @@ export default function DreamView({
   checkLimit,
   incrementStats,
 }: Props) {
+  const t = useTranslations("Dream");
+  const tc = useTranslations("Common");
+
   return (
     <div>
-      <h2 style={{ fontSize: 16, marginBottom: 16, color: isDarkMode ? "#fff" : "#000" }}>🌈 私の夢</h2>
+      <h2 style={{ fontSize: 16, marginBottom: 16, color: isDarkMode ? "#fff" : "#000" }}>{t("title")}</h2>
 
       {/* 夢のセクション */}
       <div style={{ marginBottom: 16 }}>
@@ -76,7 +81,7 @@ export default function DreamView({
             <input
               value={dreamInput}
               onChange={(e) => setDreamInput(e.target.value)}
-              placeholder="あなたの夢を入力してください"
+              placeholder={t("dreamPlaceholder")}
               style={{
                 flex: 1,
                 padding: UI.pad,
@@ -109,7 +114,7 @@ export default function DreamView({
               }}
 
             >
-              保存
+              {t("save")}
             </button>
           </div>
         ) : (
@@ -151,7 +156,7 @@ export default function DreamView({
                   }}
 
                 >
-                  更新
+                  {t("update")}
                 </button>
                 <button
                   onClick={() => setIsEditingDream(false)}
@@ -166,7 +171,7 @@ export default function DreamView({
                   }}
 
                 >
-                  キャンセル
+                  {t("cancel")}
                 </button>
               </div>
             ) : (
@@ -197,12 +202,12 @@ export default function DreamView({
 
       {/* 目標セクション */}
       <div style={{ marginBottom: 16 }}>
-        <h3 style={{ fontSize: 16, marginBottom: 8, color: isDarkMode ? "#d1d5db" : "#000" }}>🎯 目標を設定する</h3>
+        <h3 style={{ fontSize: 16, marginBottom: 8, color: isDarkMode ? "#d1d5db" : "#000" }}>{t("goalSectionTitle")}</h3>
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <input
             value={goalInput}
             onChange={(e) => setGoalInput(e.target.value)}
-            placeholder="次に達成したい具体的な目標"
+            placeholder={t("goalPlaceholder")}
             style={{
               padding: UI.pad,
               borderRadius: UI.radius,
@@ -252,7 +257,7 @@ export default function DreamView({
               }}
 
             >
-              目標を追加
+              {t("addGoalButton")}
             </button>
           </div>
         </div>
@@ -313,12 +318,12 @@ export default function DreamView({
 
                   // 通知・演出
                   if (newDoneState) {
-                    alert(`🎉 目標達成おめでとうございます！\nボーナスポイント +100pt 獲得しました！`);
+                    alert(t("goalAchievedAlert"));
 
                     // 10個達成での機能解禁通知
                     if (newCount === 30) {
                       setTimeout(() => {
-                        alert(`🚀 新機能が解禁されました！\n\n「💯 100 LIST (死ぬまでにしたい100のこと)」\n\nがメニューに追加されました。ぜひチェックしてみてください！`);
+                        alert(t("newFeatureUnlockedAlert"));
                       }, 500);
                     }
 
@@ -370,14 +375,14 @@ export default function DreamView({
                 )}
                 {g.deadline && (
                   <div style={{ fontSize: 11, color: g.done ? (isDarkMode ? "#4b5563" : "#d1d5db") : (isDarkMode ? "#9ca3af" : "#6b7280"), marginTop: 2 }}>
-                    📅 期限: {g.deadline}
+                    {t("deadlineLabel", { date: g.deadline })}
                   </div>
                 )}
               </div>
 
               <button
                 onClick={async () => {
-                  if (!uid || !window.confirm("この目標を削除しますか？")) return;
+                  if (!uid || !window.confirm(tc("confirmDelete"))) return;
                   await deleteGoalAction(uid, g.id);
                 }}
                 style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: isDarkMode ? "#9ca3af" : "#888" }}
@@ -388,7 +393,7 @@ export default function DreamView({
           ))}
         {goals.length === 0 && (
           <p style={{ textAlign: "center", color: isDarkMode ? "#6b7280" : "#9ca3af", fontSize: 14, marginTop: 12 }}>
-            まだ目標がありません。小さな一歩から始めましょう！
+            {t("noGoals")}
           </p>
         )}
       </div>

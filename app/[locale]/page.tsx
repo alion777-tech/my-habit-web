@@ -10,7 +10,7 @@ import {
   getDoc,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import HabitView from "./components/HabitView";
+import HabitView from "../components/HabitView";
 import {
   addHabit,
   deleteHabit as deleteHabitAction,
@@ -20,27 +20,38 @@ import { calcToggleHabit } from "@/lib/habits/calcToggleHabit";
 import type { DailyStat, Habit, Goal, Todo, UserProfile, PointHistoryItem } from "@/types/appTypes";
 import { isHabitVisibleOnDate } from "@/lib/habits/visibility";
 import { useHabitCalendar } from "@/hooks/useHabitCalendar";
-import StatsView from "./components/StatsView";
-import AuthBox from "./components/AuthBox";
+import StatsView from "../components/StatsView";
+import AuthBox from "../components/AuthBox";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { getUserProfile, saveUserProfile, updateLastLogin } from "@/lib/profileActions";
-import TitleView from "./components/TitleView";
-import ProfileView from "./components/ProfileView";
-import TodoView from "./components/TodoView";
-import DreamView from "./components/DreamView";
-import HistoryView from "./components/HistoryView";
-import FriendView from "./components/FriendView";
-import BucketListView from "./components/BucketListView";
+import TitleView from "../components/TitleView";
+import ProfileView from "../components/ProfileView";
+import TodoView from "../components/TodoView";
+import DreamView from "../components/DreamView";
+import HistoryView from "../components/HistoryView";
+import FriendView from "../components/FriendView";
+import BucketListView from "../components/BucketListView";
 import { deleteGoal as deleteGoalAction } from "@/lib/goalActions";
 
 
 
 
 import { TITLE_DEFINITIONS } from "@/lib/titles";
+import { useTranslations } from "next-intl";
+import LanguageSwitcher from "@/app/components/LanguageSwitcher";
 
 export default function Home() {
   const isDev = process.env.NODE_ENV === "development";
+  const t = useTranslations();
+  const th = useTranslations("Habit");
+  const tc = useTranslations("Common");
+  const ta = useTranslations("Auth");
+  const tp = useTranslations("Profile");
+  const tg = useTranslations("Goal");
+  const td = useTranslations("Dream");
+  const ts = useTranslations("Stats");
+  const tt = useTranslations("Tabs");
 
   const [habit, setHabit] = useState("");
   const [habits, setHabits] = useState<Habit[]>([]);
@@ -349,17 +360,17 @@ export default function Home() {
 
     // 回数制限チェック
     if ((profile.dreamAchievedCount || 0) >= 5) {
-      alert("夢の達成回数が5回に達しました！これ以上は設定できません（上限）。");
+      alert(td("limitReach"));
       return;
     }
 
-    if (!window.confirm("夢を達成できたのですか？")) return;
+    if (!window.confirm(td("achievedConfirm"))) return;
 
-    const res = window.confirm("おめでとうございます！新たな夢を設定し新たな高みを目指してください。\n\n「OK」で現在の目標を維持、「キャンセル」で目標をリセットします。どちらにしますか？");
+    const res = window.confirm(t("Dream.congratsMessage"));
 
     if (res) {
       // 目標維持
-      if (window.confirm("目標は維持します。それでは引き続きよろしくお願いします！")) {
+      if (window.confirm(t("Dream.maintainConfirm"))) {
         await saveUserProfile(uid, {
           dream: "",
           dreamAchievedCount: (profile.dreamAchievedCount || 0) + 1,
@@ -369,7 +380,7 @@ export default function Home() {
       }
     } else {
       // 目標リセット
-      if (window.confirm("目標もリセットします。それでは引き続きよろしくお願いします！")) {
+      if (window.confirm(t("Dream.resetConfirm"))) {
         // 目標をすべて削除
         const goalPromises = goals.map(g => deleteGoalAction(uid, g.id));
         await Promise.all(goalPromises);
@@ -496,7 +507,7 @@ export default function Home() {
 
   const handleDeleteHabit = async (id: string) => {
     if (!uid) return;
-    if (!window.confirm("この習慣を削除しますか？")) return;
+    if (!window.confirm(th("confirmDelete"))) return;
     try {
       await deleteHabitAction(uid, id);
     } catch (e) {
@@ -507,11 +518,11 @@ export default function Home() {
   const handleSaveProfile = async () => {
     if (!uid) return;
     if (!profile.name.trim()) {
-      alert("名前を入力してください");
+      alert(tp("enterName"));
       return;
     }
     if (!profile.gender || (profile.gender !== "male" && profile.gender !== "female")) {
-      alert("性別を選択してください");
+      alert(tp("selectGender"));
       return;
     }
     try {
@@ -524,10 +535,10 @@ export default function Home() {
         showLastLogin: !!profile.showLastLogin,
       };
       await saveUserProfile(uid, updateData);
-      alert("プロフィールを保存しました");
+      alert(tp("saveSuccess"));
     } catch (e) {
       console.error("[ProfileSave] failed:", e);
-      alert("プロフィールの保存に失敗しました");
+      alert(tp("saveError"));
     }
   };
 
@@ -622,15 +633,15 @@ export default function Home() {
 
     // 累計上限
     if (type === "goals" && goals.length >= 200) {
-      alert("目標は200個が上限です。整理してから追加してください。");
+      alert(tg("limitReach"));
       return false;
     }
     if (type === "todos" && todos.length >= 200) {
-      alert("ToDoは200個が上限です。整理してから追加してください。");
+      alert(t("Todo.limitReach")); // Will add this
       return false;
     }
     if (type === "habits" && habits.length >= 50) {
-      alert("習慣は50個が上限です。これ以上追加できません。");
+      alert(th("limitReach"));
       return false;
     }
 
@@ -642,7 +653,7 @@ export default function Home() {
     );
 
     if (dailyCount >= 50) {
-      alert("今日の追加上限(50件)に達しました。明日また追加してください。");
+      alert(t("Common.dailyLimitReach")); // I should add this to messages
       return false;
     }
     return true;
@@ -763,13 +774,15 @@ export default function Home() {
         boxShadow: isDarkMode ? "0 8px 24px rgba(0,0,0,0.5)" : "0 8px 24px rgba(0,0,0,0.1)",
         transition: "background 0.3s"
       }}>
+        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 12 }}>
+          <LanguageSwitcher isDarkMode={isDarkMode} />
+        </div>
         <AuthBox isDarkMode={isDarkMode} />
 
         {uid === null && !isLoading && (
           <div style={{ textAlign: "center", marginTop: 20 }}>
             <p style={{ fontSize: 13, color: isDarkMode ? "#9ca3af" : "#666" }}>
-              ログインしてデータを同期するか、<br />
-              ゲストとして今すぐ開始できます。
+              {ta("loginMessage")}
             </p>
           </div>
         )}
@@ -807,7 +820,7 @@ export default function Home() {
                     border: isDarkMode ? "1px solid #92400e" : "1px solid #fcd34d",
                     fontWeight: "bold"
                   }}>
-                    🎖️ x{profile.dreamAchievedCount}
+                    ✨ {td("achievedCount", { count: profile.dreamAchievedCount })}
                   </span>
                 ) : null}
               </div>
@@ -1019,7 +1032,7 @@ export default function Home() {
               color: isDarkMode ? "#fbbf24" : "#444",
               fontWeight: "bold"
             }}>
-              🏆 累計獲得ポイント：{totalPoint} pt
+              🏆 {ts("points", { points: totalPoint })}
             </div>
           </>
         )}
@@ -1027,7 +1040,7 @@ export default function Home() {
         {isLoading && (
           <div style={{ padding: 40, textAlign: "center", color: "#6366f1", fontWeight: "bold" }}>
             <div style={{ fontSize: 24, marginBottom: 8 }}>🔄</div>
-            データを読み込み中...
+            {tc("loading")}
           </div>
         )}
 
@@ -1158,6 +1171,6 @@ export default function Home() {
         )}
 
       </div>
-    </main>
+    </main >
   );
 }
