@@ -978,7 +978,7 @@ export default function Home() {
                   transition: "all 0.2s"
                 }}
               >
-                📖 使い方
+                📖 {tt("usage")}
               </button>
             </div>
 
