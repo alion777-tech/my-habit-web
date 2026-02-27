@@ -77,9 +77,30 @@ export default async function RootLayout({
                 window.addEventListener('load', function() {
                   navigator.serviceWorker.register('/sw.js').then(function(registration) {
                     console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                    
+                    // Listen for updates
+                    registration.addEventListener('updatefound', () => {
+                      const newWorker = registration.installing;
+                      if (newWorker) {
+                        newWorker.addEventListener('statechange', () => {
+                          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            // New version available!
+                            console.log('New content is available; please refresh.');
+                          }
+                        });
+                      }
+                    });
                   }, function(err) {
                     console.log('ServiceWorker registration failed: ', err);
                   });
+                });
+
+                // Refresh when the new service worker takes over
+                let refreshing = false;
+                navigator.serviceWorker.addEventListener('controllerchange', () => {
+                  if (refreshing) return;
+                  refreshing = true;
+                  window.location.reload();
                 });
               }
             `,
