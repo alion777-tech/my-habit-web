@@ -903,10 +903,10 @@ export default function Home() {
           <>
             <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
               {[
-                { id: "habit", label: "習慣", icon: "🔥" },
-                { id: "dream", label: "夢・目標", icon: "🌈" },
-                { id: "todo", label: "ToDo", icon: "📝" },
-                { id: "bucketList", label: "100リスト", icon: "💯" },
+                { id: "habit", label: tt("habit"), icon: "🔥" },
+                { id: "dream", label: tt("dream"), icon: "🌈" },
+                { id: "todo", label: tt("todo"), icon: "📝" },
+                { id: "bucketList", label: tt("bucketList"), icon: "💯" },
               ].map((btn) => {
                 const isLocked = btn.id === "bucketList" && goals.filter(g => g.done).length < 30;
                 return (
@@ -940,9 +940,9 @@ export default function Home() {
 
             <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
               {[
-                { id: "history", label: "履歴", icon: "📈" },
-                { id: "stats", label: "達成率", icon: "📊" },
-                { id: "title", label: "称号", icon: "🏅" },
+                { id: "history", label: tt("history"), icon: "📈" },
+                { id: "stats", label: tt("stats"), icon: "📊" },
+                { id: "title", label: tt("title"), icon: "🏅" },
               ].map((btn) => (
                 <button
                   key={btn.id}
@@ -998,7 +998,7 @@ export default function Home() {
                   transition: "all 0.2s"
                 }}
               >
-                👤 プロフ
+                👤 {tt("profile")}
               </button>
               <button
                 onClick={() => !isAnonymous && setView("friend")}
@@ -1021,7 +1021,7 @@ export default function Home() {
                   opacity: isAnonymous ? 0.6 : 1,
                 }}
               >
-                🤝 フレンド
+                🤝 {tt("friend")}
               </button>
               <LanguageSwitcher isDarkMode={isDarkMode} />
             </div>
