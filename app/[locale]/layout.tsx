@@ -30,6 +30,8 @@ export const metadata: Metadata = {
   },
 };
 
+import LanguageSwitcher from "@/app/components/LanguageSwitcher";
+
 export default async function RootLayout({
   children,
   params,
@@ -52,7 +54,19 @@ export default async function RootLayout({
     <html lang={locale}>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        style={{ position: "relative" }}
       >
+        <div style={{
+          position: "fixed",
+          top: 10,
+          right: 10,
+          zIndex: 9999,
+          display: "flex",
+          gap: 10,
+          alignItems: "center"
+        }}>
+          <LanguageSwitcher />
+        </div>
         <NextIntlClientProvider messages={messages}>
           {children}
         </NextIntlClientProvider>
