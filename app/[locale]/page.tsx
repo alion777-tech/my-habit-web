@@ -17,6 +17,7 @@ import {
 } from "@/lib/habitActions";
 import { updateHabitFields } from "@/lib/habits/updateHabitFields";
 import { calcToggleHabit } from "@/lib/habits/calcToggleHabit";
+import { formatDateToJST } from "@/lib/habits/dateUtils";
 import type { DailyStat, Habit, Goal, Todo, UserProfile, PointHistoryItem } from "@/types/appTypes";
 import { isHabitVisibleOnDate } from "@/lib/habits/visibility";
 import { useHabitCalendar } from "@/hooks/useHabitCalendar";
@@ -627,7 +628,7 @@ export default function Home() {
 
   // 🔹 利用制限チェック用
   const checkLimit = (type: "goals" | "todos" | "habits") => {
-    const today = new Date().toISOString().split("T")[0];
+    const today = formatDateToJST(new Date());
     const s = profile.stats || {};
     const isNewDay = s.lastActionDate !== today;
 
@@ -662,7 +663,7 @@ export default function Home() {
   // 🔹 統計更新ヘルパー
   const incrementStats = async (type: "goals" | "todos" | "habits") => {
     if (!uid) return;
-    const today = new Date().toISOString().split("T")[0];
+    const today = formatDateToJST(new Date());
     const s = profile.stats || {};
     const isNewDay = s.lastActionDate !== today;
 
@@ -713,7 +714,7 @@ export default function Home() {
   // 📅 ログイン日数の更新
   useEffect(() => {
     if (!uid || isLoading) return; // profile.name チェックを緩める
-    const today = new Date().toISOString().split("T")[0];
+    const today = formatDateToJST(new Date());
     const s = profile.stats || {};
 
     if (s.lastActionDate !== today) {

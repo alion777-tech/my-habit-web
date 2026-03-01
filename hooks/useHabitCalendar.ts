@@ -4,6 +4,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { DailyStat, Habit } from "@/types/appTypes";
 import { isHabitVisibleOnDate } from "@/lib/habits/visibility";
+import { formatDateToJST, getJSTDayOfWeek } from "@/lib/habits/dateUtils";
 
 export const useHabitCalendar = (habits: Habit[]) => {
   // テスト日付オフセット（DEVボタンで増減する前提）
@@ -16,12 +17,12 @@ export const useHabitCalendar = (habits: Habit[]) => {
     return b;
   }, [testDayOffset]);
 
-  const todayStr = useMemo(() => base.toISOString().slice(0, 10), [base]);
+  const todayStr = useMemo(() => formatDateToJST(base), [base]);
 
   const yesterdayStr = useMemo(() => {
     const y = new Date(base);
     y.setDate(y.getDate() - 1);
-    return y.toISOString().slice(0, 10);
+    return formatDateToJST(y);
   }, [base]);
 
   // カレンダー表示中の月
@@ -40,7 +41,7 @@ export const useHabitCalendar = (habits: Habit[]) => {
 
     return Array.from({ length: daysInMonth }, (_, i) => {
       const d = new Date(year, month, i + 1);
-      return d.toISOString().slice(0, 10);
+      return formatDateToJST(d);
     });
   }, [currentMonth]);
 
@@ -51,8 +52,8 @@ export const useHabitCalendar = (habits: Habit[]) => {
       const total = todaysHabits.length;
 
       const doneCount = todaysHabits.filter((h) =>
-  (h.pointHistory ?? []).some((p) => p.date === date)
-).length;
+        (h.pointHistory ?? []).some((p) => p.date === date)
+      ).length;
 
       const rate = total === 0 ? 0 : Math.round((doneCount / total) * 100);
       return { date, total, doneCount, rate };
@@ -60,7 +61,7 @@ export const useHabitCalendar = (habits: Habit[]) => {
   }, [calendarDays, habits]);
 
   // 「今日の曜日」（weekly表示用）
-  const todayDow = useMemo(() => base.getDay(), [base]);
+  const todayDow = useMemo(() => getJSTDayOfWeek(base), [base]);
 
   return {
     // テスト日付
