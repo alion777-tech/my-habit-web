@@ -18,15 +18,18 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Dream-Habit",
-  description: "最強の習慣化・目標達成アプリ",
+  title: "Dream-Habit | 最強の習慣化・目標達成アプリ",
+  description: "Dream-Habitは、三日坊主を卒業し、理想の生活を習慣化するための目標達成支援ツールです。無料で簡単に日々の習慣を記録・管理できます。",
+  verification: {
+    google: "BAZtlQapgxHdCsRwYb8o2H_viq-xofcWBuISEZOlpxM", // ←これを追加！
+  },
   manifest: "/manifest.json",
   themeColor: "#4f46e5",
   viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "目標達成習慣",
+    title: "Dream-Habit",
   },
 };
 
