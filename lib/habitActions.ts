@@ -4,13 +4,15 @@ import {
   addDoc,
   deleteDoc,
   doc,
-    serverTimestamp,
+  serverTimestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { LocalStorageRepository } from "./localActions";
+import { LS_KEYS } from "./dataPersistence";
 
 // 追加
 export const addHabit = async (
-  uid: string,
+  uid: string | null, // nullを許容
   habit: string,
   habitType: "daily" | "weekly",
   daysOfWeek: number[]
@@ -19,33 +21,54 @@ export const addHabit = async (
 
   console.log("[addHabit] start:", { uid, habit, habitType, daysOfWeek });
 
-  try {
-    const docRef = await addDoc(collection(db, "users", uid, "habits"), {
+  if (uid) {
+    try {
+      const docRef = await addDoc(collection(db, "users", uid, "habits"), {
+        text: habit,
+        type: habitType,
+        daysOfWeek: habitType === "weekly" ? daysOfWeek : null,
+        createdAt: serverTimestamp(),
+        dailyStreak: 0,
+        lastCompletedDate: null,
+        point: 0,
+        pointHistory: [],
+      });
+      console.log("[addHabit] success Firestore:", docRef.id);
+    } catch (e) {
+      console.error("[addHabit] failed Firestore:", e);
+      throw e;
+    }
+  } else {
+    // LocalStorage
+    const newHabit = {
+      id: "local_" + Date.now().toString(),
       text: habit,
       type: habitType,
       daysOfWeek: habitType === "weekly" ? daysOfWeek : null,
-      createdAt: serverTimestamp(),
+      createdAt: new Date(),
       dailyStreak: 0,
       lastCompletedDate: null,
       point: 0,
       pointHistory: [],
-    });
-    console.log("[addHabit] success:", docRef.id);
-  } catch (e) {
-    console.error("[addHabit] failed:", e);
-    throw e;
+    };
+    LocalStorageRepository.addItem(LS_KEYS.HABITS, newHabit);
+    console.log("[addHabit] success LocalStorage:", newHabit.id);
   }
 };
 
-// 削除（強化版）
-export const deleteHabit = async (uid: string, id: string) => {
-  if (!uid || !id) return;
+// 削除
+export const deleteHabit = async (uid: string | null, id: string) => {
+  if (!id) return;
 
-  try {
-    await deleteDoc(doc(db, "users", uid, "habits", id));
-  } catch (e) {
-    console.error("deleteHabit failed:", e);
-    throw e;
+  if (uid) {
+    try {
+      await deleteDoc(doc(db, "users", uid, "habits", id));
+    } catch (e) {
+      console.error("deleteHabit failed Firestore:", e);
+      throw e;
+    }
+  } else {
+    LocalStorageRepository.deleteItem(LS_KEYS.HABITS, id);
+    console.log("[deleteHabit] success LocalStorage:", id);
   }
 };
-

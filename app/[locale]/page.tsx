@@ -26,6 +26,7 @@ import AuthBox from "../components/AuthBox";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { getUserProfile, saveUserProfile, updateLastLogin } from "@/lib/profileActions";
+import { subscribeData, subscribeProfile } from "@/lib/dataPersistence";
 import TitleView from "../components/TitleView";
 import ProfileView from "../components/ProfileView";
 import TodoView from "../components/TodoView";
@@ -137,36 +138,26 @@ export default function Home() {
 
   // 👤 プロフィールのリアルタイム監視
   useEffect(() => {
-    if (!uid) {
-      resetAllData();
-      return;
-    }
-
-    console.log("[ProfileSync] starting snapshot for:", uid);
-    // 新しいユーザーへ切り替わる際、以前のデータをクリアしておく（混ざるのを防ぐ）
-
+    console.log("[ProfileSync] starting subscription for uid:", uid);
     setIsLoading(true);
 
-    const unsub = onSnapshot(doc(db, "users", uid), async (snap) => {
+    const unsub = subscribeProfile(uid, async (data) => {
       try {
-        if (snap.exists()) {
-          const data = snap.data();
-
-          // ログイン状態などは status から取得
+        if (data) {
           let lastLoginAt = data.lastLoginAt;
-          try {
-            const statusRef = doc(db, "users", uid, "public", "status");
-            const statusSnap = await getDoc(statusRef);
-            if (statusSnap.exists()) {
-              lastLoginAt = statusSnap.data().lastLoginAt;
-            }
-          } catch (e) {
-            // サイレントに
+          if (uid) {
+            try {
+              const statusRef = doc(db, "users", uid, "public", "status");
+              const statusSnap = await getDoc(statusRef);
+              if (statusSnap.exists()) {
+                lastLoginAt = statusSnap.data().lastLoginAt;
+              }
+            } catch (e) {}
           }
 
           const p: UserProfile = {
-            ...data, // 既存のフィールドを維持 (stats等)
-            uid: uid,
+            ...data,
+            uid: uid || "local",
             name: data.name ?? "",
             gender: data.gender ?? "",
             dream: data.dream ?? data.dreams ?? "",
@@ -177,36 +168,28 @@ export default function Home() {
             dreamAchievedCount: data.dreamAchievedCount ?? 0,
             lastLoginAt: lastLoginAt ?? null,
           };
-          console.log("[ProfileSync] data received at users/", uid);
 
           setProfile(prev => {
             const merged = { ...prev, ...p };
-            if (p.name === "" && prev.name !== "") {
-              merged.name = prev.name;
-            }
-            if (p.gender === "" && prev.gender !== "") {
-              merged.gender = prev.gender;
-            }
+            if (p.name === "" && prev.name !== "") merged.name = prev.name;
+            if (p.gender === "" && prev.gender !== "") merged.gender = prev.gender;
             return merged;
           });
           setEarnedTitles(p.earnedTitles);
         } else {
-          console.log("[ProfileSync] document does not exist yet at users/", uid);
-          // 補完
-          const p = await getUserProfile(uid);
-          if (p) {
-            setProfile(p);
-            setEarnedTitles(p.earnedTitles);
+          if (uid) {
+            const p = await getUserProfile(uid);
+            if (p) {
+              setProfile(p);
+              setEarnedTitles(p.earnedTitles);
+            }
           }
         }
       } catch (e) {
-        console.error("[ProfileSync] Error processing snapshot:", e);
+        console.error("[ProfileSync] Error processing:", e);
       } finally {
         setIsLoading(false);
       }
-    }, (error) => {
-      console.error(`[ProfileSync] Permission error on users/${uid}:`, error);
-      setIsLoading(false);
     });
 
     return () => unsub();
@@ -217,94 +200,60 @@ export default function Home() {
 
 
   useEffect(() => {
-    if (!uid) return;
+    const unsub = subscribeData<Goal>("goals", uid, (list) => {
+      const formatted = list.map((d: any) => ({
+        id: d.id,
+        title: d.title ?? "",
+        deadline: d.deadline ?? null,
+        done: !!d.done,
+      }));
+      setGoals(formatted);
 
-    const q = query(
-      collection(db, "users", uid, "goals"),
-      orderBy("createdAt", "desc")
-    );
+      // 🔹 統計データの整合性チェック (既存ユーザーのデータ移行用)
+      if (profile.uid && !isLoading) {
+        const achievedCount = formatted.filter(g => g.done).length;
+        const currentCount = profile.stats?.goalsAchievedCount || 0;
 
-    const unsub = onSnapshot(
-      q,
-      (snapshot) => {
-        const list: Goal[] = snapshot.docs.map((d) => {
-          const data = d.data();
-          return {
-            id: d.id,
-            title: data.title ?? "",
-            deadline: data.deadline ?? null,
-            done: !!data.done,
-          };
-        });
+        // 実際の達成数と統計がズレていたら修正
+        if (achievedCount !== currentCount) {
+          console.log(`[StatsCorrection] Fixing goalsAchievedCount: ${currentCount} -> ${achievedCount}`);
 
-        setGoals(list);
+          // 差分個数 × 100pt を加算（減算）
+          const diffCount = achievedCount - currentCount;
+          const currentBonus = profile.bonusPoints || 0;
+          const newBonus = Math.max(0, currentBonus + (diffCount * 100));
 
-        // 🔹 統計データの整合性チェック (既存ユーザーのデータ移行用)
-        if (profile.uid && !isLoading) {
-          const achievedCount = list.filter(g => g.done).length;
-          const currentCount = profile.stats?.goalsAchievedCount || 0;
+          const newStats = { ...(profile.stats || {}), goalsAchievedCount: achievedCount };
 
-          // 実際の達成数と統計がズレていたら修正
-          if (achievedCount !== currentCount) {
-            console.log(`[StatsCorrection] Fixing goalsAchievedCount: ${currentCount} -> ${achievedCount}`);
-
-            // 差分個数 × 100pt を加算（減算）
-            const diffCount = achievedCount - currentCount;
-            const currentBonus = profile.bonusPoints || 0;
-            const newBonus = Math.max(0, currentBonus + (diffCount * 100));
-
-            const newStats = { ...(profile.stats || {}), goalsAchievedCount: achievedCount };
-
-            saveUserProfile(uid, {
-              stats: newStats,
-              bonusPoints: newBonus
-            });
-            setProfile(prev => ({
-              ...prev,
-              stats: newStats,
-              bonusPoints: newBonus
-            }));
-          }
+          saveUserProfile(uid, {
+            stats: newStats,
+            bonusPoints: newBonus
+          });
+          setProfile(prev => ({
+            ...prev,
+            stats: newStats,
+            bonusPoints: newBonus
+          }));
         }
-      },
-      (error) => {
-        console.error("[onSnapshot goals] error:", error);
       }
-    );
+    });
 
     return () => unsub();
-  }, [uid]);
+  }, [uid, profile.uid, profile.stats, profile.bonusPoints, isLoading]);
 
 
 
   // handleAddHabit moved below with limit check
 
   useEffect(() => {
-    if (!uid) return;
-
-    const q = query(
-      collection(db, "users", uid, "todos"),
-      orderBy("createdAt", "desc")
-    );
-
-    const unsub = onSnapshot(
-      q,
-      (snapshot) => {
-        const list = snapshot.docs.map((d) => {
-          const data = d.data();
-          return {
-            id: d.id,
-            text: data.text ?? "",
-            done: !!data.done,
-          };
-        });
-
-        setTodos(list);
-      },
-      (error) => {
-        console.error("[onSnapshot todos] error:", error);
-      }
-    );
+    const unsub = subscribeData<Todo>("todos", uid, (list) => {
+      const formatted = list.map((d: any) => ({
+        id: d.id,
+        text: d.text ?? "",
+        done: !!d.done,
+      }));
+      setTodos(formatted);
+    });
 
     return () => unsub();
   }, [uid]);
@@ -422,7 +371,6 @@ export default function Home() {
         setUid(null);
         setIsAnonymous(false);
         setIsLoading(false);
-        resetAllData();
       }
     });
   }, []);
@@ -431,55 +379,40 @@ export default function Home() {
 
 
 
-  // 🔹 初回読み込み（Firestore → 画面）
+  // 🔹 初回読み込み（Firestore / LocalStorage → 画面）
   useEffect(() => {
-    if (!uid) return;
+    const unsub = subscribeData<any>("habits", uid, (list) => {
+      const formatted = list.map((doc) => {
+        const data = doc;
 
-    const q = query(
-      collection(db, "users", uid, "habits"),
-      orderBy("createdAt", "desc")
-    );
-
-    const unsub = onSnapshot(
-      q,
-      (snapshot) => {
-        const list: Habit[] = snapshot.docs.map((doc) => {
-          const data = doc.data();
-
-          let createdAt: Date | null = null;
-          if (data.createdAt) {
-            if (data.createdAt.toDate) {
-              createdAt = data.createdAt.toDate(); // Firestore Timestamp
-            } else if (data.createdAt instanceof Date) {
-              createdAt = data.createdAt; // JS Date
-            }
+        let createdAt: Date | null = null;
+        if (data.createdAt) {
+          if (data.createdAt.toDate) {
+            createdAt = data.createdAt.toDate(); // Firestore Timestamp
+          } else if (data.createdAt instanceof Date) {
+            createdAt = data.createdAt; // JS Date
           }
+        }
 
-          return {
-            id: doc.id,
-            text: data.text,
-            createdAt,
-            type: data.type ?? "daily",
-            daysOfWeek: data.daysOfWeek ?? undefined,
-            dailyStreak: data.dailyStreak ?? 0,
-            lastCompletedDate: data.lastCompletedDate ?? null,
-            point: typeof data.point === "number" ? data.point : 0,
-            pointHistory: Array.isArray(data.pointHistory)
-              ? (data.pointHistory
-                .filter((p: any) => p && typeof p.date === "string" && typeof p.point === "number")
-                .map((p: any) => ({ date: p.date, point: p.point })) as PointHistoryItem[])
-              : [],
-          };
-        });
+        return {
+          id: doc.id,
+          text: data.text,
+          createdAt,
+          type: data.type ?? "daily",
+          daysOfWeek: data.daysOfWeek ?? undefined,
+          dailyStreak: data.dailyStreak ?? 0,
+          lastCompletedDate: data.lastCompletedDate ?? null,
+          point: typeof data.point === "number" ? data.point : 0,
+          pointHistory: Array.isArray(data.pointHistory)
+            ? (data.pointHistory
+              .filter((p: any) => p && typeof p.date === "string" && typeof p.point === "number")
+              .map((p: any) => ({ date: p.date, point: p.point })) as PointHistoryItem[])
+            : [],
+        };
+      });
 
-        setHabits(list);
-      },
-      (error) => {
-        console.error("[onSnapshot habits] error:", error);
-      }
-    );
-
-
+      setHabits(formatted);
+    });
 
     return () => unsub();
   }, [uid]);
@@ -487,7 +420,6 @@ export default function Home() {
 
   const saveEdit = async (id: string) => {
     if (!editingText.trim()) return;
-    if (!uid) return;
 
     await updateHabitFields(uid, id, { text: editingText });
 
@@ -500,14 +432,12 @@ export default function Home() {
     if (!h) return;
 
     const result = calcToggleHabit(h, todayStr, yesterdayStr);
-    if (!uid) return;
     await updateHabitFields(uid, h.id, result.fields);
 
     if (result.alertMessage) alert(result.alertMessage);
   };
 
   const handleDeleteHabit = async (id: string) => {
-    if (!uid) return;
     if (!window.confirm(th("confirmDelete"))) return;
     try {
       await deleteHabitAction(uid, id);
@@ -517,7 +447,6 @@ export default function Home() {
   };
 
   const handleSaveProfile = async () => {
-    if (!uid) return;
     if (!profile.name.trim()) {
       alert(tp("enterName"));
       return;
@@ -662,7 +591,6 @@ export default function Home() {
 
   // 🔹 統計更新ヘルパー
   const incrementStats = async (type: "goals" | "todos" | "habits") => {
-    if (!uid) return;
     const today = formatDateToJST(new Date());
     const s = profile.stats || {};
     const isNewDay = s.lastActionDate !== today;
@@ -681,7 +609,6 @@ export default function Home() {
   };
 
   const handleAddHabit = async () => {
-    if (!uid) return;
     if (!checkLimit("habits")) return;
 
     await addHabit(uid, habit, habitType, daysOfWeek);
@@ -693,7 +620,7 @@ export default function Home() {
   };
 
   const handleAddTodo = async () => {
-    if (!uid || !todoInput.trim()) return;
+    if (!todoInput.trim()) return;
     if (!checkLimit("todos")) return;
 
     const { addTodo } = await import("@/lib/todoActions");

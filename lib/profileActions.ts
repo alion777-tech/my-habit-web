@@ -1,15 +1,16 @@
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase";
 import type { UserProfile } from "@/types/appTypes";
+import { LocalStorageRepository } from "./localActions";
 
 /**
  * ユーザープロフィールの取得
- * - 本人なら users/{uid} を読む
- * - 他人なら publicUsers/{uid} を読む
- * - 加えて、ログイン状況を users/{uid}/public/status から取得してマージする
  */
-export const getUserProfile = async (uid: string): Promise<UserProfile | null> => {
-  if (!uid) return null;
+export const getUserProfile = async (uid: string | null): Promise<UserProfile | null> => {
+  if (!uid) {
+    // LocalStorageから取得
+    return LocalStorageRepository.getProfile();
+  }
 
   try {
     const currentUid = auth.currentUser?.uid;
@@ -20,14 +21,12 @@ export const getUserProfile = async (uid: string): Promise<UserProfile | null> =
     const profileSnap = await getDoc(profileRef);
 
     if (!profileSnap.exists()) {
-      console.log(`[getUserProfile] Profile not found at: ${profileRef.path}`);
       return null;
     }
 
     const profileData = profileSnap.data();
 
-    // 2. 状態（最終ログイン等）の取得 - users/{uid}/public/status
-    // このパスはログイン済みなら誰でも読み取り可能
+    // 2. 状態（最終ログイン等）の取得
     let statusData: any = {};
     try {
       const statusRef = doc(db, "users", uid, "public", "status");
@@ -36,7 +35,6 @@ export const getUserProfile = async (uid: string): Promise<UserProfile | null> =
         statusData = statusSnap.data();
       }
     } catch (e) {
-      // 権限エラー等はログに出すが、プロフィールの返却は継続
       console.warn(`[getUserProfile] Could not read status for ${uid}:`, e);
     }
 
@@ -50,11 +48,12 @@ export const getUserProfile = async (uid: string): Promise<UserProfile | null> =
       showGoal: !!profileData.showGoal || !!profileData.showGoals,
       earnedTitles: Array.isArray(profileData.earnedTitles) ? profileData.earnedTitles : [],
       dreamAchievedCount: profileData.dreamAchievedCount ?? 0,
-      // lastLoginAt は statusData から優先的に取得
       lastLoginAt: statusData.lastLoginAt ?? profileData.lastLoginAt ?? null,
       showLastLogin: !!profileData.showLastLogin,
       following: profileData.following ?? [],
       recentAction: profileData.recentAction ?? null,
+      stats: profileData.stats ?? {},
+      bonusPoints: profileData.bonusPoints ?? 0,
     };
   } catch (e) {
     console.error(`[getUserProfile] Fatal error reading profile for ${uid}:`, e);
@@ -64,10 +63,27 @@ export const getUserProfile = async (uid: string): Promise<UserProfile | null> =
 
 /**
  * ユーザープロフィールの保存
- * - 本人領域 users/{uid} と 検索/公開用 publicUsers/{uid} の両方に書き込む
  */
-export const saveUserProfile = async (uid: string, profile: Partial<UserProfile>) => {
-  if (!uid || auth.currentUser?.uid !== uid) return;
+export const saveUserProfile = async (uid: string | null, profile: Partial<UserProfile>) => {
+  if (!uid) {
+    // LocalStorageへ保存
+    const current = LocalStorageRepository.getProfile() || {
+      uid: "local",
+      name: "",
+      gender: "",
+      dream: "",
+      isPublic: false,
+      showDream: false,
+      showGoal: false,
+      earnedTitles: [],
+      stats: {},
+    };
+    const updated = { ...current, ...profile };
+    LocalStorageRepository.setProfile(updated);
+    return;
+  }
+
+  if (auth.currentUser?.uid !== uid) return;
 
   const batch = {
     ...profile,
@@ -75,11 +91,8 @@ export const saveUserProfile = async (uid: string, profile: Partial<UserProfile>
   };
 
   try {
-    // 本人領域
     await setDoc(doc(db, "users", uid), batch, { merge: true });
-    // 公開領域
     await setDoc(doc(db, "publicUsers", uid), batch, { merge: true });
-    console.log(`[saveUserProfile] Saved to users/${uid} and publicUsers/${uid}`);
   } catch (e) {
     console.error(`[saveUserProfile] Error saving profile for ${uid}:`, e);
     throw e;
@@ -88,11 +101,9 @@ export const saveUserProfile = async (uid: string, profile: Partial<UserProfile>
 
 /**
  * ログイン状況/アクティブ状況の更新
- * users/{uid}/public/status に書き込む（ルールで本人のみwrite、全員read可）
  */
-export const updateLastLogin = async (uid: string) => {
-  if (!uid || !auth.currentUser) return;
-  if (auth.currentUser.uid !== uid) return;
+export const updateLastLogin = async (uid: string | null) => {
+  if (!uid || !auth.currentUser || auth.currentUser.uid !== uid) return;
 
   try {
     const statusRef = doc(db, "users", uid, "public", "status");
@@ -102,13 +113,10 @@ export const updateLastLogin = async (uid: string) => {
       lastActive: now
     }, { merge: true });
 
-    // 公開プロフィール側にも同期して、フォローしている人から見えるようにする
     const publicRef = doc(db, "publicUsers", uid);
     await setDoc(publicRef, {
       lastLoginAt: now
     }, { merge: true });
-
-    console.log(`[updateLastLogin] Updated status and public profile for: ${uid}`);
   } catch (e) {
     console.error(`[updateLastLogin] Error:`, e);
   }
@@ -117,7 +125,7 @@ export const updateLastLogin = async (uid: string) => {
 /**
  * アクティブ状況のみ更新
  */
-export const updateLastActive = async (uid: string) => {
+export const updateLastActive = async (uid: string | null) => {
   if (!uid || !auth.currentUser || auth.currentUser.uid !== uid) return;
   try {
     const statusRef = doc(db, "users", uid, "public", "status");
