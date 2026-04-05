@@ -928,24 +928,24 @@ export default function Home() {
                 👤 {tt("profile")}
               </button>
               <button
-                onClick={() => !isAnonymous && setView("friend")}
-                disabled={isAnonymous}
+                onClick={() => uid && setView("friend")}
+                disabled={!uid}
                 style={{
                   flex: 1,
                   padding: "10px 4px",
-                  background: isAnonymous
+                  background: !uid
                     ? (isDarkMode ? "#374151" : "#d1d5db")
                     : (view === "friend" ? "#4f46e5" : (isDarkMode ? "transparent" : "#e5e7eb")),
-                  color: isAnonymous
+                  color: !uid
                     ? (isDarkMode ? "#9ca3af" : "#6b7280")
                     : (view === "friend" ? "#fff" : (isDarkMode ? "#fff" : "#374151")),
                   border: view === "friend" ? "none" : (isDarkMode ? "1.5px solid #fff" : "none"),
                   borderRadius: 8,
                   fontWeight: "bold",
                   fontSize: 13,
-                  cursor: isAnonymous ? "not-allowed" : "pointer",
+                  cursor: !uid ? "not-allowed" : "pointer",
                   transition: "all 0.2s",
-                  opacity: isAnonymous ? 0.6 : 1,
+                  opacity: !uid ? 0.6 : 1,
                 }}
               >
                 🤝 {tt("friend")}
