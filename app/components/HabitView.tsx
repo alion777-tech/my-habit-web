@@ -193,7 +193,6 @@ export default function HabitView({
                   type="checkbox"
                   checked={isDoneToday}
                   onChange={() => {
-                    if (!uid) return;
                     onToggleHabit(h.id);
                   }}
                   style={{ marginRight: 10, width: 18, height: 18 }}

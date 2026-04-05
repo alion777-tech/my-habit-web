@@ -167,7 +167,6 @@ export default function ProfileView({ uid, profile, setProfile, onSave, isDarkMo
 
       <button
         onClick={async () => {
-          if (!uid) return;
           await onSave();
         }}
         style={{

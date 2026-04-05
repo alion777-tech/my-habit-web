@@ -95,7 +95,7 @@ export default function DreamView({
             />
             <button
               onClick={async () => {
-                if (!uid || !dreamInput.trim()) return;
+                if (!dreamInput.trim()) return;
                 const trimmed = dreamInput.trim();
                 console.log("[DreamSave] saving:", trimmed);
                 await saveUserProfile(uid, { dream: trimmed });
@@ -138,7 +138,7 @@ export default function DreamView({
                 />
                 <button
                   onClick={async () => {
-                    if (!uid) return;
+                    
                     const trimmed = dreamInput.trim();
                     await saveUserProfile(uid, { dream: trimmed });
                     setProfile(prev => ({ ...prev, dream: trimmed }));
@@ -236,7 +236,7 @@ export default function DreamView({
             />
             <button
               onClick={async () => {
-                if (!uid || !goalInput.trim()) return;
+                if (!goalInput.trim()) return;
                 if (!checkLimit("goals")) return;
 
                 await addGoalAction(uid, goalInput.trim(), deadline || undefined);
@@ -292,7 +292,7 @@ export default function DreamView({
                 type="checkbox"
                 checked={g.done}
                 onChange={async () => {
-                  if (!uid) return;
+                  
                   const newDoneState = !g.done;
 
                   // 1. ゴール状態更新
@@ -327,8 +327,10 @@ export default function DreamView({
                       }, 500);
                     }
 
-                    const { updateRecentAction } = await import("@/lib/socialActions");
-                    await updateRecentAction(uid, g.title, "goal");
+                    if (uid) {
+                      const { updateRecentAction } = await import("@/lib/socialActions");
+                      await updateRecentAction(uid, g.title, "goal");
+                    }
                   }
                 }}
                 style={{ width: 18, height: 18, cursor: "pointer" }}
@@ -340,7 +342,7 @@ export default function DreamView({
                     value={editingGoalText}
                     onChange={(e) => setEditingGoalText(e.target.value)}
                     onBlur={async () => {
-                      if (!uid || !editingGoalText.trim()) {
+                      if (!editingGoalText.trim()) {
                         setEditingGoalId(null);
                         return;
                       }
@@ -382,7 +384,7 @@ export default function DreamView({
 
               <button
                 onClick={async () => {
-                  if (!uid || !window.confirm(tc("confirmDelete"))) return;
+                  if (!window.confirm(tc("confirmDelete"))) return;
                   await deleteGoalAction(uid, g.id);
                 }}
                 style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: isDarkMode ? "#9ca3af" : "#888" }}

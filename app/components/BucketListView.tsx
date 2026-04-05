@@ -54,7 +54,7 @@ export default function BucketListView({ uid, isDarkMode = false }: Props) {
 
     // Load data
     useEffect(() => {
-        if (!uid) return;
+
 
         const load = async () => {
             setIsLoading(true);
@@ -81,7 +81,7 @@ export default function BucketListView({ uid, isDarkMode = false }: Props) {
 
     // Auto-save logic
     useEffect(() => {
-        if (!hasUnsavedChanges || !uid) return;
+        if (!hasUnsavedChanges) return;
 
         if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
 

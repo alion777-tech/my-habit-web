@@ -16,6 +16,7 @@ export const LS_KEYS = {
   GOALS: "goals_v2",
   TODOS: "todos_v2",
   PROFILE: "profile_v2",
+  BUCKET_LIST: "bucket_list_v2",
 };
 
 // カスタムイベント名

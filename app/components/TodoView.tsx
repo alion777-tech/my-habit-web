@@ -75,7 +75,6 @@ export default function TodoView({
       <div style={{ display: "flex", gap: 8 }}>
         <button
           onClick={async () => {
-            if (!uid) return;
             if (!todoInput.trim()) return;
             if (!checkLimit("todos")) return;
 
@@ -120,7 +119,7 @@ export default function TodoView({
                 type="checkbox"
                 checked={item.done}
                 onChange={() => {
-                  if (!uid) return;
+
                   toggleTodo(uid, item.id, item.done);
                 }}
                 style={{ width: 18, height: 18, cursor: "pointer" }}
@@ -132,7 +131,7 @@ export default function TodoView({
                   value={editingTodoText}
                   onChange={(e) => setEditingTodoText(e.target.value)}
                   onBlur={async () => {
-                    if (!uid) return;
+  
                     if (!editingTodoText.trim()) return;
 
                     await updateTodo(uid, item.id, editingTodoText);
@@ -181,7 +180,7 @@ export default function TodoView({
                   padding: 4
                 }}
                 onClick={() => {
-                  if (!uid) return;
+
                   deleteTodo(uid, item.id);
                 }}
               >
@@ -212,7 +211,7 @@ export default function TodoView({
                 type="checkbox"
                 checked={item.done}
                 onChange={async () => {
-                  if (!uid) return;
+
                   await toggleTodo(uid, item.id, item.done);
                 }}
                 style={{ width: 18, height: 18, cursor: "pointer" }}
@@ -239,7 +238,7 @@ export default function TodoView({
                   padding: 4
                 }}
                 onClick={() => {
-                  if (!uid) return;
+
                   deleteTodo(uid, item.id);
                 }}
               >

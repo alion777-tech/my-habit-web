@@ -827,8 +827,7 @@ export default function Home() {
         </div>
 
         {/* ===== ナビゲーションボタン (Loading外に出して安定させる) ===== */}
-        {uid && (
-          <>
+        <>
             <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
               {[
                 { id: "habit", label: tt("habit"), icon: "🔥" },
@@ -962,7 +961,6 @@ export default function Home() {
               🏆 {ts("points", { points: totalPoint })}
             </div>
           </>
-        )}
 
         {isLoading && (
           <div style={{ padding: 40, textAlign: "center", color: "#6366f1", fontWeight: "bold" }}>

@@ -44,4 +44,17 @@ export class LocalStorageRepository {
     const saved = localStorage.getItem(LS_KEYS.PROFILE);
     return saved ? JSON.parse(saved) : null;
   }
+
+  static getItem<T>(key: string): T | null {
+    if (typeof window === "undefined") return null;
+    const saved = localStorage.getItem(key);
+    return saved ? JSON.parse(saved) : null;
+  }
+
+  static setItem<T>(key: string, value: T) {
+    if (typeof window === "undefined") return;
+    localStorage.setItem(key, JSON.stringify(value));
+    notifyLocalStorageChange();
+  }
 }
+
