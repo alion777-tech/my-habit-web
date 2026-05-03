@@ -122,7 +122,11 @@
             "5": "金",
             "6": "土"
         },
-        "saveButton": "習慣を保存"
+        "saveButton": "習慣を保存",
+        "today": "今日",
+        "yesterday": "昨日",
+        "yesterdayNotice": "昨日の習慣をチェックしています",
+        "limitReach": "習慣は50個が上限です。"
     },
     "BucketList": {
         "titleDefault": "死ぬまでにしたい100のこと",

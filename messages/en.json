@@ -122,7 +122,11 @@
             "5": "Fri",
             "6": "Sat"
         },
-        "saveButton": "Save Habit"
+        "saveButton": "Save Habit",
+        "today": "Today",
+        "yesterday": "Yesterday",
+        "yesterdayNotice": "Checking yesterday's habits",
+        "limitReach": "Max 50 habits reached."
     },
     "BucketList": {
         "titleDefault": "100 things to do before I die",

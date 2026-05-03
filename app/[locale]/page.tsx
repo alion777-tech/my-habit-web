@@ -273,6 +273,11 @@ export default function Home() {
   const [isLinking, setIsLinking] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
 
+  // 習慣表示用の日付 (今日 or 昨日)
+  const [habitDisplayDate, setHabitDisplayDate] = useState<"today" | "yesterday">("today");
+  const activeHabitDate = habitDisplayDate === "today" ? todayStr : yesterdayStr;
+  const activeHabitDow = habitDisplayDate === "today" ? todayDow : (todayDow === 0 ? 6 : todayDow - 1);
+
   // 初回読み込み時にローカルストレージからダークモード設定を取得
   useEffect(() => {
     const saved = localStorage.getItem("isDarkMode");
@@ -431,7 +436,7 @@ export default function Home() {
     const h = habits.find(h => h.id === habitId);
     if (!h) return;
 
-    const result = calcToggleHabit(h, todayStr, yesterdayStr);
+    const result = calcToggleHabit(h, activeHabitDate, todayStr, yesterdayStr);
     await updateHabitFields(uid, h.id, result.fields);
 
     if (result.alertMessage) alert(result.alertMessage);
@@ -667,12 +672,12 @@ export default function Home() {
   const visibleHabits = habits
     .filter(h => {
       if (h.type === "daily") return true;
-      if (h.type === "weekly" && h.daysOfWeek?.includes(todayDow)) return true;
+      if (h.type === "weekly" && h.daysOfWeek?.includes(activeHabitDow)) return true;
       return false;
     })
     .sort((a, b) => {
-      const aDone = (a.pointHistory ?? []).some(p => p.date === todayStr);
-      const bDone = (b.pointHistory ?? []).some(p => p.date === todayStr);
+      const aDone = (a.pointHistory ?? []).some(p => p.date === activeHabitDate);
+      const bDone = (b.pointHistory ?? []).some(p => p.date === activeHabitDate);
       if (aDone === bDone) return 0;
       return aDone ? 1 : -1; // 未達成(false)を前に、達成済み(true)を後に
     });
@@ -975,7 +980,7 @@ export default function Home() {
             setHabit={(v) => setHabit(v)}
             onAddHabit={handleAddHabit}
             isDev={isDev}
-            todayStr={todayStr}
+            todayStr={activeHabitDate}
             setTestDayOffset={setTestDayOffset}
             habitType={habitType}
             setHabitType={setHabitType}
@@ -991,6 +996,8 @@ export default function Home() {
             onSaveEdit={saveEdit}
             onDeleteHabit={handleDeleteHabit}
             isDarkMode={isDarkMode}
+            habitDisplayDate={habitDisplayDate}
+            setHabitDisplayDate={setHabitDisplayDate}
           />
         )}
 

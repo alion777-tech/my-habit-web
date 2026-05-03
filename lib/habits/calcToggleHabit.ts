@@ -1,4 +1,5 @@
 // lib/habits/calcToggleHabit.ts
+import { formatDateToJST } from "./dateUtils";
 
 type Habit = {
   id: string;
@@ -13,7 +14,8 @@ type ToggleCalcResult =
   | {
       kind: "uncheck";
       fields: {
-        lastCompletedDate?: string | null; // 触らない運用
+        lastCompletedDate: string | null;
+        dailyStreak: number;
         point: number;
         pointHistory: { date: string; point: number }[];
       };
@@ -39,28 +41,55 @@ const getBonusPoint = (streak: number): number => {
   return 0;
 };
 
+/**
+ * 指定した日付時点での連続日数を履歴から計算する
+ */
+const getStreakAtDate = (history: { date: string }[], targetDate: string): number => {
+  let streak = 0;
+  let current = targetDate;
+  while (history.some((h) => h.date === current)) {
+    streak++;
+    const d = new Date(current);
+    d.setDate(d.getDate() - 1);
+    current = formatDateToJST(d);
+  }
+  return streak;
+};
+
 export const calcToggleHabit = (
   h: Habit,
+  targetDate: string,
   todayStr: string,
   yesterdayStr: string
 ): ToggleCalcResult => {
   const currentPoint = h.point ?? 0;
   const history = Array.isArray(h.pointHistory) ? h.pointHistory : [];
 
-  // ★ 今日の達成判定：pointHistory に todayStr があるか
-  const todayEntry = history.find((p) => p.date === todayStr);
-  const isDoneToday = !!todayEntry;
+  // ★ 対象日の達成判定
+  const targetEntry = history.find((p) => p.date === targetDate);
+  const isDoneTarget = !!targetEntry;
 
-  // ===== チェックを外す（その日付の履歴を消す）=====
-  if (isDoneToday) {
-    const minus = todayEntry?.point ?? 0;
+  // ===== チェックを外す =====
+  if (isDoneTarget) {
+    const minus = targetEntry?.point ?? 0;
+    const newHistory = history.filter((p) => p.date !== targetDate);
 
-    const newHistory = history.filter((p) => p.date !== todayStr);
+    // ストリークと最終達成日の再計算
+    let newDailyStreak = 0;
+    let newLastCompletedDate: string | null = null;
+
+    if (newHistory.length > 0) {
+      // 履歴の中で最新の日付を探す
+      const sorted = [...newHistory].sort((a, b) => b.date.localeCompare(a.date));
+      newLastCompletedDate = sorted[0].date;
+      newDailyStreak = getStreakAtDate(newHistory, newLastCompletedDate);
+    }
 
     return {
       kind: "uncheck",
       fields: {
-        // lastCompletedDate は「最後に達成した日」なので、ここでは無理に弄らない（安全）
+        lastCompletedDate: newLastCompletedDate,
+        dailyStreak: newDailyStreak,
         point: currentPoint - minus,
         pointHistory: newHistory,
       },
@@ -68,30 +97,44 @@ export const calcToggleHabit = (
     };
   }
 
-  // ===== チェックを入れる（その日付の履歴を追加）=====
-  let newStreak = 1;
+  // ===== チェックを入れる =====
+  // 1. 対象日の前日のストリークを取得
+  const d = new Date(targetDate);
+  d.setDate(d.getDate() - 1);
+  const dayBeforeTarget = formatDateToJST(d);
+  const prevStreak = getStreakAtDate(history, dayBeforeTarget);
 
-  if (h.lastCompletedDate === yesterdayStr) {
-    newStreak = (h.dailyStreak ?? 0) + 1;
-  } else {
-    newStreak = 1;
-  }
-
-  const bonusPoint = getBonusPoint(newStreak);
+  const targetStreak = prevStreak + 1;
+  const bonusPoint = getBonusPoint(targetStreak);
   const earnedPoint = 1 + bonusPoint;
 
-  const newHistory = [...history, { date: todayStr, point: earnedPoint }];
+  const newHistory = [...history, { date: targetDate, point: earnedPoint }];
+
+  // 2. 最終的なストリークと達成日の判定（今日が既に達成済みなら繋げる）
+  let finalStreak = targetStreak;
+  let finalLastCompletedDate = targetDate;
+
+  // もし「昨日」をチェックし、「今日」が既に達成済みならストリークを繋げる
+  if (targetDate === yesterdayStr && history.some((p) => p.date === todayStr)) {
+    finalStreak = targetStreak + 1;
+    finalLastCompletedDate = todayStr;
+  } else {
+    // 常に最新の日付を lastCompletedDate にする
+    const sorted = [...newHistory].sort((a, b) => b.date.localeCompare(a.date));
+    finalLastCompletedDate = sorted[0].date;
+    finalStreak = getStreakAtDate(newHistory, finalLastCompletedDate);
+  }
 
   const alertMessage =
-    newStreak === 3 || newStreak === 7 || newStreak === 30
-      ? `🏆 ${h.text}：${newStreak}日達成！`
+    finalStreak === 3 || finalStreak === 7 || finalStreak === 30
+      ? `🏆 ${h.text}：${finalStreak}日達成！`
       : undefined;
 
   return {
     kind: "check",
     fields: {
-      dailyStreak: newStreak,
-      lastCompletedDate: todayStr,
+      dailyStreak: finalStreak,
+      lastCompletedDate: finalLastCompletedDate,
       point: currentPoint + earnedPoint,
       pointHistory: newHistory,
     },

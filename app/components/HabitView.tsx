@@ -52,6 +52,10 @@ type Props = {
   onSaveEdit: (habitId: string) => void;
   onDeleteHabit: (habitId: string) => void;
   isDarkMode?: boolean;
+
+  // 過去分チェック用
+  habitDisplayDate?: "today" | "yesterday";
+  setHabitDisplayDate?: (v: "today" | "yesterday") => void;
 };
 
 import { useTranslations } from "next-intl";
@@ -79,6 +83,9 @@ export default function HabitView({
   todayStr,
   setTestDayOffset,
   isDarkMode = false,
+
+  habitDisplayDate = "today",
+  setHabitDisplayDate,
 }: Props) {
   const t = useTranslations("Habit");
   const tc = useTranslations("Common");
@@ -155,6 +162,67 @@ export default function HabitView({
       >
         {t("addButton")}
       </button>
+
+      {/* 表示切替タブ */}
+      {setHabitDisplayDate && (
+        <div style={{
+          display: "flex",
+          marginBottom: 16,
+          background: isDarkMode ? "#374151" : "#f1f5f9",
+          borderRadius: 8,
+          padding: 4
+        }}>
+          <button
+            onClick={() => setHabitDisplayDate("today")}
+            style={{
+              flex: 1,
+              padding: "6px 0",
+              borderRadius: 6,
+              border: "none",
+              background: habitDisplayDate === "today" ? (isDarkMode ? "#4f46e5" : "#fff") : "transparent",
+              color: habitDisplayDate === "today" ? (isDarkMode ? "#fff" : "#4f46e5") : (isDarkMode ? "#9ca3af" : "#64748b"),
+              fontWeight: "bold",
+              fontSize: 12,
+              cursor: "pointer",
+              boxShadow: habitDisplayDate === "today" && !isDarkMode ? "0 1px 3px rgba(0,0,0,0.1)" : "none"
+            }}
+          >
+            {t("today")}
+          </button>
+          <button
+            onClick={() => setHabitDisplayDate("yesterday")}
+            style={{
+              flex: 1,
+              padding: "6px 0",
+              borderRadius: 6,
+              border: "none",
+              background: habitDisplayDate === "yesterday" ? (isDarkMode ? "#4f46e5" : "#fff") : "transparent",
+              color: habitDisplayDate === "yesterday" ? (isDarkMode ? "#fff" : "#4f46e5") : (isDarkMode ? "#9ca3af" : "#64748b"),
+              fontWeight: "bold",
+              fontSize: 12,
+              cursor: "pointer",
+              boxShadow: habitDisplayDate === "yesterday" && !isDarkMode ? "0 1px 3px rgba(0,0,0,0.1)" : "none"
+            }}
+          >
+            {t("yesterday")}
+          </button>
+        </div>
+      )}
+
+      {habitDisplayDate === "yesterday" && (
+        <div style={{
+          fontSize: 11,
+          color: isDarkMode ? "#fbbf24" : "#d97706",
+          textAlign: "center",
+          marginBottom: 12,
+          padding: "4px 8px",
+          background: isDarkMode ? "#451a03" : "#fffbeb",
+          borderRadius: 4,
+          border: isDarkMode ? "1px solid #92400e" : "1px solid #fcd34d"
+        }}>
+          ⚠️ {t("yesterdayNotice")}
+        </div>
+      )}
 
       {visibleHabits.length === 0 && (
         <p style={{ color: "#888", textAlign: "center", padding: 20 }}>{t("noHabits")}</p>
