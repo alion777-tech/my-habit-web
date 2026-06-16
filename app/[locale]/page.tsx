@@ -436,8 +436,27 @@ export default function Home() {
     const h = habits.find(h => h.id === habitId);
     if (!h) return;
 
-    const result = calcToggleHabit(h, activeHabitDate, todayStr, yesterdayStr);
+    const result = calcToggleHabit(
+      h,
+      activeHabitDate,
+      todayStr,
+      yesterdayStr,
+      profile.stats?.earnedHabitStreakBonuses ?? []
+    );
     await updateHabitFields(uid, h.id, result.fields);
+
+    if (result.earnedHabitStreakBonus) {
+      const newStats = {
+        ...(profile.stats || {}),
+        earnedHabitStreakBonuses: result.earnedHabitStreakBonus.earnedBonuses,
+      };
+
+      await saveUserProfile(uid, { stats: newStats });
+      setProfile(prev => ({
+        ...prev,
+        stats: newStats,
+      }));
+    }
 
     if (result.alertMessage) alert(result.alertMessage);
   };

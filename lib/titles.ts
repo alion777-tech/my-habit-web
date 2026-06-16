@@ -87,6 +87,30 @@ export const TITLE_DEFINITIONS: TitleDefinition[] = [
         bonusPoints: 3650,
         check: (s) => (s.loginDays || 0) >= 365
     },
+    {
+        id: "login_1095",
+        name: "3年ログイン継続",
+        category: "continuity",
+        conditionDescription: "累計1095日ログイン",
+        bonusPoints: 10950,
+        check: (s) => (s.loginDays || 0) >= 1095
+    },
+    {
+        id: "login_2555",
+        name: "7年ログイン継続",
+        category: "continuity",
+        conditionDescription: "累計2555日ログイン",
+        bonusPoints: 25550,
+        check: (s) => (s.loginDays || 0) >= 2555
+    },
+    {
+        id: "login_3650",
+        name: "10年ログイン継続",
+        category: "continuity",
+        conditionDescription: "累計3650日ログイン",
+        bonusPoints: 36500,
+        check: (s) => (s.loginDays || 0) >= 3650
+    },
 
     // pt系
     {
@@ -325,9 +349,9 @@ export const TITLE_DEFINITIONS: TitleDefinition[] = [
         id: "login_streak_90",
         name: "3ヶ月皆勤",
         category: "hidden",
-        conditionDescription: "90日連続ログイン",
+        conditionDescription: "累計90日ログイン",
         bonusPoints: 1000,
-        check: (s) => (s.continuousLoginDays || 0) >= 90
+        check: (s) => (s.loginDays || 0) >= 90
     },
     {
         id: "anniversary_1",

@@ -70,6 +70,7 @@ export type UserProfile = {
     goalsCreatedCount?: number;
     habitsCreatedCount?: number;
     goalsAchievedCount?: number;
+    earnedHabitStreakBonuses?: number[];
 
     // 悪戯防止用
     lastActionDate?: string; // "YYYY-MM-DD"
