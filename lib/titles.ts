@@ -24,7 +24,7 @@ export const TITLE_DEFINITIONS: TitleDefinition[] = [
     {
         id: "login_3",
         name: "3日坊主撃破",
-        category: "continuity",
+        category: "royalty",
         conditionDescription: "累計3日ログイン",
         bonusPoints: 30,
         check: (s) => (s.loginDays || 0) >= 3
@@ -32,7 +32,7 @@ export const TITLE_DEFINITIONS: TitleDefinition[] = [
     {
         id: "login_7",
         name: "1週間の壁突破",
-        category: "continuity",
+        category: "royalty",
         conditionDescription: "累計7日ログイン",
         bonusPoints: 70,
         check: (s) => (s.loginDays || 0) >= 7
@@ -40,7 +40,7 @@ export const TITLE_DEFINITIONS: TitleDefinition[] = [
     {
         id: "login_10",
         name: "継続ビギナー",
-        category: "continuity",
+        category: "royalty",
         conditionDescription: "累計10日ログイン",
         bonusPoints: 100,
         check: (s) => (s.loginDays || 0) >= 10
@@ -48,7 +48,7 @@ export const TITLE_DEFINITIONS: TitleDefinition[] = [
     {
         id: "login_20",
         name: "継続マスター",
-        category: "continuity",
+        category: "royalty",
         conditionDescription: "累計20日ログイン",
         bonusPoints: 200,
         check: (s) => (s.loginDays || 0) >= 20
@@ -56,7 +56,7 @@ export const TITLE_DEFINITIONS: TitleDefinition[] = [
     {
         id: "login_30",
         name: "月間制覇者",
-        category: "continuity",
+        category: "royalty",
         conditionDescription: "累計30日ログイン",
         bonusPoints: 300,
         check: (s) => (s.loginDays || 0) >= 30
@@ -64,7 +64,7 @@ export const TITLE_DEFINITIONS: TitleDefinition[] = [
     {
         id: "login_100",
         name: "百日修行僧",
-        category: "continuity",
+        category: "royalty",
         conditionDescription: "累計100日ログイン",
         bonusPoints: 1000,
         check: (s) => (s.loginDays || 0) >= 100
@@ -72,7 +72,7 @@ export const TITLE_DEFINITIONS: TitleDefinition[] = [
     {
         id: "login_200",
         name: "習慣の求道者",
-        category: "continuity",
+        category: "royalty",
         conditionDescription: "累計200日ログイン",
         bonusPoints: 2000,
         check: (s) => (s.loginDays || 0) >= 200
@@ -80,7 +80,7 @@ export const TITLE_DEFINITIONS: TitleDefinition[] = [
     {
         id: "login_365",
         name: "一年の守護者",
-        category: "continuity",
+        category: "royalty",
         conditionDescription: "累計365日ログイン",
         bonusPoints: 3650,
         check: (s) => (s.loginDays || 0) >= 365
@@ -88,7 +88,7 @@ export const TITLE_DEFINITIONS: TitleDefinition[] = [
     {
         id: "login_1095",
         name: "3年ログイン継続",
-        category: "continuity",
+        category: "royalty",
         conditionDescription: "累計1095日ログイン",
         bonusPoints: 10950,
         check: (s) => (s.loginDays || 0) >= 1095
@@ -96,7 +96,7 @@ export const TITLE_DEFINITIONS: TitleDefinition[] = [
     {
         id: "login_2555",
         name: "7年ログイン継続",
-        category: "continuity",
+        category: "royalty",
         conditionDescription: "累計2555日ログイン",
         bonusPoints: 25550,
         check: (s) => (s.loginDays || 0) >= 2555
@@ -104,7 +104,7 @@ export const TITLE_DEFINITIONS: TitleDefinition[] = [
     {
         id: "login_3650",
         name: "10年ログイン継続",
-        category: "continuity",
+        category: "royalty",
         conditionDescription: "累計3650日ログイン",
         bonusPoints: 36500,
         check: (s) => (s.loginDays || 0) >= 3650
