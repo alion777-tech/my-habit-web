@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   collection,
   onSnapshot,
@@ -520,7 +520,7 @@ export default function Home() {
   const level = Math.floor(totalPoint / 100) + 1;
 
   // 🏅 称号獲得処理
-  const handleAwardTitles = async () => {
+  const handleAwardTitles = useCallback(async () => {
     if (!uid || isLoading) return;
     const s = profile.stats || {};
     const newTitles: string[] = [...earnedTitles];
@@ -576,7 +576,12 @@ export default function Home() {
         bonusPoints: totalTitleBonus
       }));
     }
-  };
+  }, [uid, isLoading, profile.stats, profile.earnedTitles, earnedTitles, totalPoint, habits.length, goals.length]);
+
+  // 🏅 称号の自動判定と獲得
+  useEffect(() => {
+    handleAwardTitles();
+  }, [handleAwardTitles]);
 
 
   // 🔹 利用制限チェック用
@@ -684,7 +689,6 @@ export default function Home() {
 
       const firstLoginAt = profile.firstLoginAt || new Date();
       saveUserProfile(uid, { stats: newStats, firstLoginAt });
-      handleAwardTitles();
     }
   }, [uid, yesterdayStr, isLoading]);
 

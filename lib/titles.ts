@@ -21,8 +21,6 @@ export const TITLE_DEFINITIONS: TitleDefinition[] = [
         bonusPoints: 10,
         check: (s) => (s.habitsCreatedCount || 0) >= 1
     },
-
-    // 継続系（ログイン日数）
     {
         id: "login_3",
         name: "3日坊主撃破",
