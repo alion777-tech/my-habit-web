@@ -209,37 +209,25 @@ export default function Home() {
       }));
       setGoals(formatted);
 
-      // 🔹 統計データの整合性チェック (既存ユーザーのデータ移行用)
+      // 🔹 統計データの整合性チェック: goalsAchievedCount のみ補正する
+      // ✅ 修正: bonusPoints は称号専用フィールドのため、ここでは絶対に触らない
+      // (ここで bonusPoints を変更すると称号ボーナスが消えてリロード時に再獲得ループが起きる)
       if (profile.uid && !isLoading) {
         const achievedCount = formatted.filter(g => g.done).length;
         const currentCount = profile.stats?.goalsAchievedCount || 0;
 
-        // 実際の達成数と統計がズレていたら修正
         if (achievedCount !== currentCount) {
           console.log(`[StatsCorrection] Fixing goalsAchievedCount: ${currentCount} -> ${achievedCount}`);
-
-          // 差分個数 × 100pt を加算（減算）
-          const diffCount = achievedCount - currentCount;
-          const currentBonus = profile.bonusPoints || 0;
-          const newBonus = Math.max(0, currentBonus + (diffCount * 100));
-
           const newStats = { ...(profile.stats || {}), goalsAchievedCount: achievedCount };
-
-          saveUserProfile(uid, {
-            stats: newStats,
-            bonusPoints: newBonus
-          });
-          setProfile(prev => ({
-            ...prev,
-            stats: newStats,
-            bonusPoints: newBonus
-          }));
+          // bonusPoints は変更しない。称号ボーナスは handleAwardTitles が管理する
+          saveUserProfile(uid, { stats: newStats });
+          setProfile(prev => ({ ...prev, stats: newStats }));
         }
       }
     });
 
     return () => unsub();
-  }, [uid, profile.uid, profile.stats, profile.bonusPoints, isLoading]);
+  }, [uid, profile.uid, profile.stats, isLoading]);
 
 
 
@@ -1111,7 +1099,7 @@ export default function Home() {
         {view === "title" && (
           <TitleView
             level={level}
-            earnedTitles={earnedTitles}
+            earnedTitles={profile.earnedTitles || earnedTitles}
             titles={TITLE_DEFINITIONS}
             isDarkMode={isDarkMode}
             toggleDarkMode={toggleDarkMode}
