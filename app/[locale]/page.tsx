@@ -523,42 +523,50 @@ export default function Home() {
   const handleAwardTitles = useCallback(async () => {
     if (!uid || isLoading) return;
     const s = profile.stats || {};
-    const newTitles: string[] = [...earnedTitles];
+
+    // ✅ 修正: DB側の profile.earnedTitles を唯一の基準とする
+    // earnedTitles(ローカルState)はFirestore更新後に非同期で変わるため、
+    // 両方を依存に持つと重複アラートのループが発生する
+    const dbEarnedTitles: string[] = Array.isArray(profile.earnedTitles) ? [...profile.earnedTitles] : [];
+    const newTitles: string[] = [...dbEarnedTitles];
     let totalTitleBonus = 0;
 
     // 既存の称号のポイントも再計算（整合性確保）
     TITLE_DEFINITIONS.forEach(t => {
-      if (earnedTitles.includes(t.id)) {
+      if (dbEarnedTitles.includes(t.id)) {
         totalTitleBonus += t.bonusPoints;
       }
     });
 
     let earnedAny = false;
-    let newBonusAdded = 0;
 
-    // 統計の自動補正 (habitsCreatedCount / goalsCreatedCount)
-    // 実際のドキュメント数と stats がズレている場合があるため、称号判定用に補正したものを使う
+    // ✅ 修正: loginDays / firstLoginAt を correctedStats に明示的に引き継ぐ
+    // ログイン日数の更新はこの関数とは別の useEffect で行われるため、
+    // s（profile.stats）からそのまま引き継いで補正する
     const correctedStats = {
       ...s,
       totalPoints: totalPoint,
       habitsCreatedCount: Math.max(s.habitsCreatedCount || 0, habits.length),
       goalsCreatedCount: Math.max(s.goalsCreatedCount || 0, goals.length),
+      // loginDays / firstLoginAt は s からそのまま引き継ぐ（別useEffectで更新済み）
+      loginDays: s.loginDays || 0,
+      firstLoginAt: profile.firstLoginAt ?? null,
     };
 
     TITLE_DEFINITIONS.forEach(t => {
-      if (!newTitles.includes(t.id) && t.check(correctedStats)) {
+      // ✅ 修正: DB側(dbEarnedTitles)に含まれていないかで新規判定
+      if (!dbEarnedTitles.includes(t.id) && t.check(correctedStats)) {
         newTitles.push(t.id);
         totalTitleBonus += t.bonusPoints;
-        newBonusAdded += t.bonusPoints;
         earnedAny = true;
         alert(`🏅 新しい称号を獲得！\n「${t.name}」\nボーナス: +${t.bonusPoints} pt`);
       }
     });
 
-    // 称号ボーナスが現在のDB値と異なる、または新しい称号がある場合に更新
+    // DB側と新しいリストが異なる場合のみ更新
     const sameTitles =
-      JSON.stringify(newTitles.sort()) ===
-      JSON.stringify((profile.earnedTitles || []).sort());
+      JSON.stringify(newTitles.slice().sort()) ===
+      JSON.stringify(dbEarnedTitles.slice().sort());
 
     if (!sameTitles) {
       if (earnedAny) playCharing();
@@ -576,7 +584,9 @@ export default function Home() {
         bonusPoints: totalTitleBonus
       }));
     }
-  }, [uid, isLoading, profile.stats, profile.earnedTitles, earnedTitles, totalPoint, habits.length, goals.length]);
+  // ✅ 修正: earnedTitles(ローカルState)を依存から除外しループを防ぐ
+  //         profile.earnedTitles(DB値)だけを参照する
+  }, [uid, isLoading, profile.stats, profile.earnedTitles, profile.firstLoginAt, totalPoint, habits.length, goals.length]);
 
   // 🏅 称号の自動判定と獲得
   useEffect(() => {
